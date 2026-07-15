@@ -33,7 +33,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <ScreenContainer>
-      <Text style={styles.logo}>DhreamBox</Text>
+      <Text style={styles.logo}>HealthBox</Text>
       <TextInputField
         label="Phone Number"
         placeholder="Enter your phone number"

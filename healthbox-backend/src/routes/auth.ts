@@ -1,11 +1,9 @@
 import { Router, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../lib/prisma";
 
-const prisma = new PrismaClient();
-
-export const authRouter = Router();
+export const authRouter: Router = Router();
 
 interface RegisterBody {
   fullName: string;

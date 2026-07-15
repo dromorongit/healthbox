@@ -4,7 +4,7 @@ let db: SQLite.SQLiteDatabase | null = null;
 
 export function getDb(): SQLite.SQLiteDatabase {
   if (db === null) {
-    db = SQLite.openDatabaseSync("dhreambox.db");
+    db = SQLite.openDatabaseSync("healthbox.db");
     db.execSync(`
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,

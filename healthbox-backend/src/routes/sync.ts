@@ -1,10 +1,9 @@
-import { Router, Request, Response } from "express";
-import { PrismaClient, MalariaCase as PrismaMalariaCase } from "@prisma/client";
+import { Router, Response } from "express";
+import { MalariaCase as PrismaMalariaCase } from "@prisma/client";
 import { authMiddleware, AuthenticatedRequest } from "../middleware/authMiddleware";
+import { prisma } from "../lib/prisma";
 
-const prisma = new PrismaClient();
-
-export const syncRouter = Router();
+export const syncRouter: Router = Router();
 
 interface MalariaCaseInput {
   id: string;

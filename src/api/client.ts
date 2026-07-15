@@ -1,6 +1,6 @@
 import { MalariaCase } from "../types/case";
 
-const API_URL = "https://dhreambox-backend-production.up.railway.app"; // TODO: Update once backend is deployed
+const API_URL = "https://healthbox-backend-production.up.railway.app"; // TODO: Update once backend is deployed (placeholder URL)
 
 export interface SyncResponse {
   syncedIds: string[];

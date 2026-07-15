@@ -1,11 +1,12 @@
 {
-  "name": "dhreambox",
+  "name": "healthbox",
   "version": "1.0.0",
   "main": "index.ts",
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
     "@expo/vector-icons": "^15.0.2",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/netinfo": "^12.0.1",
     "@react-navigation/bottom-tabs": "6.5.2",
     "@react-navigation/native": "6.1.6",
     "@react-navigation/native-stack": "6.9.13",

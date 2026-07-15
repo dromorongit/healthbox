@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "dhreambox",
-    "slug": "dhreambox",
+    "name": "HealthBox",
+    "slug": "healthbox",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
