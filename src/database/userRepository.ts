@@ -1,0 +1,83 @@
+import { getDb } from "./db";
+import * as Crypto from "expo-crypto";
+import { User } from "../types/user";
+
+export async function hashPassword(password: string): Promise<string> {
+  const digest = await Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    password
+  );
+  return digest;
+}
+
+export async function createUser(user: User): Promise<void> {
+  try {
+    const db = getDb();
+    const stmt = db.prepareSync(
+      "INSERT INTO users (id, fullName, phoneNumber, passwordHash, facility, role, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    );
+    stmt.executeSync([
+      user.id,
+      user.fullName,
+      user.phoneNumber,
+      user.passwordHash,
+      user.facility,
+      user.role,
+      user.createdAt,
+    ]);
+    stmt.finalizeSync();
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("UNIQUE constraint failed")) {
+      throw new Error("Phone number already registered");
+    }
+    throw new Error("Failed to create user");
+  }
+}
+
+export async function findUserByPhone(phoneNumber: string): Promise<User | null> {
+  try {
+    const db = getDb();
+    const result = db.getAllSync<User>("SELECT * FROM users WHERE phoneNumber = ?", [phoneNumber]);
+    if (result.length === 0) {
+      return null;
+    }
+    return result[0];
+  } catch (error) {
+    throw new Error("Failed to find user");
+  }
+}
+
+export async function findUserById(id: string): Promise<User | null> {
+  try {
+    const db = getDb();
+    const result = db.getAllSync<User>("SELECT * FROM users WHERE id = ?", [id]);
+    if (result.length === 0) {
+      return null;
+    }
+    return result[0];
+  } catch (error) {
+    throw new Error("Failed to find user");
+  }
+}
+
+export async function verifyPassword(
+  phoneNumber: string,
+  password: string
+): Promise<User> {
+  try {
+    const user = await findUserByPhone(phoneNumber);
+    if (user === null) {
+      throw new Error("Invalid phone number or password");
+    }
+    const passwordHash = await hashPassword(password);
+    if (user.passwordHash !== passwordHash) {
+      throw new Error("Invalid phone number or password");
+    }
+    return user;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error("Failed to verify password");
+  }
+}
