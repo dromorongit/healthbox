@@ -23,7 +23,6 @@ export function authMiddleware(
       return;
     }
 
-    console.log("Auth middleware received token (first 20 chars):", token.substring(0, 20));
     const jwtSecret = process.env.JWT_SECRET;
     if (jwtSecret === undefined || jwtSecret === null) {
       res.status(500).json({ error: "JWT_SECRET not configured" });
@@ -34,9 +33,6 @@ export function authMiddleware(
     req.userId = decoded.userId;
     next();
   } catch (error) {
-    const errorType = error instanceof Error ? error.name : "UnknownError";
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.log("Auth middleware token error - type:", errorType, "message:", errorMessage);
     if (error instanceof Error) {
       res.status(401).json({ error: "Invalid token" });
       return;

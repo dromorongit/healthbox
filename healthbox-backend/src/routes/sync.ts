@@ -39,7 +39,7 @@ interface MalariaCaseInput {
 syncRouter.post(
   "/cases",
   authMiddleware,
-  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     if (req.userId === undefined || req.userId === null) {
       res.status(401).json({ error: "User not authenticated" });
       return;
@@ -47,7 +47,6 @@ syncRouter.post(
 
     try {
       const cases = req.body as MalariaCaseInput[];
-      console.log("Received sync request for cases:", JSON.stringify(cases, null, 2));
       if (cases === undefined || cases === null || !Array.isArray(cases)) {
         res.status(400).json({ error: "Request body must be an array of cases" });
         return;
@@ -58,7 +57,6 @@ syncRouter.post(
 
       for (const caseInput of cases) {
         try {
-          console.log(`Attempting upsert for case ${caseInput.id} with data:`, JSON.stringify(caseInput));
           await prisma.malariaCase.upsert({
             where: { id: caseInput.id },
             create: {
@@ -120,7 +118,6 @@ syncRouter.post(
               updatedAt: new Date(caseInput.updatedAt),
             },
           });
-          console.log(`Successfully synced case ${caseInput.id}`);
           syncedIds.push(caseInput.id);
         } catch (upsertError) {
           const errorMessage = upsertError instanceof Error ? upsertError.message : String(upsertError);
@@ -129,7 +126,6 @@ syncRouter.post(
         }
       }
 
-      console.log(`Sync response - syncedIds: ${JSON.stringify(syncedIds)}, failedIds: ${JSON.stringify(failedIds)}`);
       res.json({ syncedIds, failedIds });
     } catch (error) {
       console.error("Sync cases error:", error);
