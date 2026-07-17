@@ -27,6 +27,73 @@ function generateAdminTokens(adminUserId: string): { accessToken: string; refres
   return { accessToken, refreshToken };
 }
 
+interface AdminRegisterBody {
+  fullName: string;
+  email: string;
+  password: string;
+  facility: string;
+}
+
+adminAuthRouter.post("/register", async (req: Request, res: Response): Promise<void> => {
+  try {
+    const body = req.body as AdminRegisterBody;
+
+    if (body.fullName === undefined || body.fullName === null || body.fullName.trim() === "") {
+      res.status(400).json({ error: "Full name is required" });
+      return;
+    }
+    if (body.email === undefined || body.email === null || body.email.trim() === "") {
+      res.status(400).json({ error: "Email is required" });
+      return;
+    }
+    if (body.password === undefined || body.password === null || body.password.length < 6) {
+      res.status(400).json({ error: "Password must be at least 6 characters" });
+      return;
+    }
+    if (body.facility === undefined || body.facility === null || body.facility.trim() === "") {
+      res.status(400).json({ error: "Facility is required" });
+      return;
+    }
+
+    const existingAdmin = await prisma.adminUser.findUnique({
+      where: { email: body.email },
+    });
+
+    if (existingAdmin !== null) {
+      res.status(409).json({ error: "Email already registered" });
+      return;
+    }
+
+    const passwordHash = await bcrypt.hash(body.password, 10);
+
+    const adminUser = await prisma.adminUser.create({
+      data: {
+        fullName: body.fullName,
+        email: body.email,
+        passwordHash,
+        facility: body.facility,
+        role: "USER",
+      },
+    });
+
+    const tokens = generateAdminTokens(adminUser.id);
+
+    res.status(201).json({
+      admin: {
+        id: adminUser.id,
+        fullName: adminUser.fullName,
+        email: adminUser.email,
+        role: adminUser.role,
+        facility: adminUser.facility,
+      },
+      ...tokens,
+    });
+  } catch (error) {
+    console.error("Admin register error:", error);
+    res.status(500).json({ error: "Failed to register" });
+  }
+});
+
 adminAuthRouter.post("/login", async (req: Request, res: Response): Promise<void> => {
   try {
     const body = req.body as AdminLoginBody;

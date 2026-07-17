@@ -13,7 +13,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "recharts": "^2.12.7",
-    "xlsx": "^0.18.12",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "papaparse": "^5.4.1",
     "file-saver": "^2.0.5"
   },
