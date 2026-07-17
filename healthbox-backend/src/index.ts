@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { authRouter } from "./routes/auth";
 import { syncRouter } from "./routes/sync";
+import { adminAuthRouter } from "./routes/adminAuth";
+import { adminCasesRouter } from "./routes/adminCases";
 
 dotenv.config();
 
@@ -18,6 +20,8 @@ app.get("/health", (_req: Request, res: Response) => {
 
 app.use("/api/auth", authRouter);
 app.use("/api/sync", syncRouter);
+app.use("/api/admin/auth", adminAuthRouter);
+app.use("/api/admin", adminCasesRouter);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

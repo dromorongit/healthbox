@@ -1,23 +1,28 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { useEffect, useState } from "react";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import { AuthNavigator } from "./src/navigation/AuthNavigator";
 import { AppNavigator } from "./src/navigation/AppNavigator";
-import { colors } from "./src/theme/colors";
+import { SplashScreen } from "./src/screens/SplashScreen";
 import { initDb } from "./src/database/db";
 
 initDb();
 
 function AppContent() {
   const { currentUser, isLoading } = useAuth();
+  const [showSplash, setShowSplash] = useState<boolean>(true);
 
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primaryBlue} />
-      </View>
-    );
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (showSplash) {
+    return <SplashScreen />;
   }
 
   return currentUser ? <AppNavigator /> : <AuthNavigator />;
@@ -33,12 +38,3 @@ export default function App() {
     </AuthProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: colors.background,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
