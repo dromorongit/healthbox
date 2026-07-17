@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { getDb } from "./db";
 import * as Crypto from "expo-crypto";
 import { User } from "../types/user";

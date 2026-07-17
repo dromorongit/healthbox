@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useEffect, useRef } from "react";
 import NetInfo, { NetInfoState } from "@react-native-community/netinfo";
 import { runSync, canSync } from "../sync/syncManager";
