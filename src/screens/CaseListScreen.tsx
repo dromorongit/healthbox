@@ -69,9 +69,13 @@ export const CaseListScreen: React.FC<any> = ({ navigation }) => {
     if (syncing) {
       return;
     }
+    if (accessToken === null || accessToken === undefined) {
+      console.log("Not logged in — please log in again to sync");
+      return;
+    }
     setSyncing(true);
     try {
-      await runSync(accessToken ?? "dummy-token");
+      await runSync(accessToken);
       setLastSynced(new Date().toLocaleTimeString());
       await loadCases();
       await loadUnsyncedCount();
