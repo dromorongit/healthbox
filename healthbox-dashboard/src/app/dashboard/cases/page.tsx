@@ -123,19 +123,19 @@ export default function CasesPage() {
           type="text"
           placeholder="Search by patient name"
           value={filters.search}
-          onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })}
+          onChange={(e) => { setPage(1); setFilters({ ...filters, search: e.target.value }); }}
           className="px-3 py-2 border border-[#E0E0E0] rounded-md"
         />
         <input
           type="text"
           placeholder="Facility"
           value={filters.facility}
-          onChange={(e) => setFilters({ ...filters, facility: e.target.value, page: 1 })}
+          onChange={(e) => { setPage(1); setFilters({ ...filters, facility: e.target.value }); }}
           className="px-3 py-2 border border-[#E0E0E0] rounded-md"
         />
         <select
           value={filters.status}
-          onChange={(e) => setFilters({ ...filters, status: e.target.value, page: 1 })}
+          onChange={(e) => { setPage(1); setFilters({ ...filters, status: e.target.value }); }}
           className="px-3 py-2 border border-[#E0E0E0] rounded-md"
         >
           <option value="">All Status</option>
@@ -145,13 +145,13 @@ export default function CasesPage() {
         <input
           type="date"
           value={filters.dateFrom}
-          onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value, page: 1 })}
+          onChange={(e) => { setPage(1); setFilters({ ...filters, dateFrom: e.target.value }); }}
           className="px-3 py-2 border border-[#E0E0E0] rounded-md"
         />
         <input
           type="date"
           value={filters.dateTo}
-          onChange={(e) => setFilters({ ...filters, dateTo: e.target.value, page: 1 })}
+          onChange={(e) => { setPage(1); setFilters({ ...filters, dateTo: e.target.value }); }}
           className="px-3 py-2 border border-[#E0E0E0] rounded-md"
         />
       </div>

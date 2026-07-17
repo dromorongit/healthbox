@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
