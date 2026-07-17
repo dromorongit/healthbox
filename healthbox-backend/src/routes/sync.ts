@@ -12,7 +12,7 @@ interface MalariaCaseInput {
   sex: string;
   phoneNumber: string | null;
   community: string;
-  isPregnant: boolean | null;
+  isPregnant: number | null;
   visitDate: string;
   facilityName: string;
   healthWorkerId: string;
@@ -25,11 +25,11 @@ interface MalariaCaseInput {
   microscopyResult: string;
   parasiteSpecies: string | null;
   parasiteDensity: string | null;
-  diagnosisConfirmed: boolean;
+  diagnosisConfirmed: number;
   treatmentGiven: string;
   dosageNotes: string | null;
-  referredToHospital: boolean;
-  followUpRequired: boolean;
+  referredToHospital: number;
+  followUpRequired: number;
   followUpDate: string | null;
   status: string;
   createdAt: string;
@@ -47,6 +47,7 @@ syncRouter.post(
 
     try {
       const cases = req.body as MalariaCaseInput[];
+      console.log("Received sync request for cases:", JSON.stringify(cases, null, 2));
       if (cases === undefined || cases === null || !Array.isArray(cases)) {
         res.status(400).json({ error: "Request body must be an array of cases" });
         return;
@@ -55,76 +56,80 @@ syncRouter.post(
       const syncedIds: string[] = [];
       const failedIds: string[] = [];
 
-      for (const malariaCase of cases) {
+      for (const caseInput of cases) {
         try {
+          console.log(`Attempting upsert for case ${caseInput.id} with data:`, JSON.stringify(caseInput));
           await prisma.malariaCase.upsert({
-            where: { id: malariaCase.id },
+            where: { id: caseInput.id },
             create: {
-              id: malariaCase.id,
-              patientFullName: malariaCase.patientFullName,
-              age: malariaCase.age,
-              sex: malariaCase.sex,
-              phoneNumber: malariaCase.phoneNumber,
-              community: malariaCase.community,
-              isPregnant: malariaCase.isPregnant,
-              visitDate: malariaCase.visitDate,
-              facilityName: malariaCase.facilityName,
-              healthWorkerId: malariaCase.healthWorkerId,
-              healthWorkerName: malariaCase.healthWorkerName,
-              symptoms: malariaCase.symptoms,
-              temperature: malariaCase.temperature,
-              illnessDurationDays: malariaCase.illnessDurationDays,
-              testType: malariaCase.testType,
-              rdtResult: malariaCase.rdtResult,
-              microscopyResult: malariaCase.microscopyResult,
-              parasiteSpecies: malariaCase.parasiteSpecies,
-              parasiteDensity: malariaCase.parasiteDensity,
-              diagnosisConfirmed: malariaCase.diagnosisConfirmed,
-              treatmentGiven: malariaCase.treatmentGiven,
-              dosageNotes: malariaCase.dosageNotes,
-              referredToHospital: malariaCase.referredToHospital,
-              followUpRequired: malariaCase.followUpRequired,
-              followUpDate: malariaCase.followUpDate,
-              status: malariaCase.status,
-              createdAt: new Date(malariaCase.createdAt),
-              updatedAt: new Date(malariaCase.updatedAt),
+              id: caseInput.id,
+              patientFullName: caseInput.patientFullName,
+              age: caseInput.age,
+              sex: caseInput.sex,
+              phoneNumber: caseInput.phoneNumber,
+              community: caseInput.community,
+              isPregnant: caseInput.isPregnant === null ? null : Boolean(caseInput.isPregnant),
+              visitDate: caseInput.visitDate,
+              facilityName: caseInput.facilityName,
+              healthWorkerId: caseInput.healthWorkerId,
+              healthWorkerName: caseInput.healthWorkerName,
+              symptoms: caseInput.symptoms,
+              temperature: caseInput.temperature,
+              illnessDurationDays: caseInput.illnessDurationDays,
+              testType: caseInput.testType,
+              rdtResult: caseInput.rdtResult,
+              microscopyResult: caseInput.microscopyResult,
+              parasiteSpecies: caseInput.parasiteSpecies,
+              parasiteDensity: caseInput.parasiteDensity,
+              diagnosisConfirmed: Boolean(caseInput.diagnosisConfirmed),
+              treatmentGiven: caseInput.treatmentGiven,
+              dosageNotes: caseInput.dosageNotes,
+              referredToHospital: Boolean(caseInput.referredToHospital),
+              followUpRequired: Boolean(caseInput.followUpRequired),
+              followUpDate: caseInput.followUpDate,
+              status: caseInput.status,
+              createdAt: new Date(caseInput.createdAt),
+              updatedAt: new Date(caseInput.updatedAt),
             },
             update: {
-              patientFullName: malariaCase.patientFullName,
-              age: malariaCase.age,
-              sex: malariaCase.sex,
-              phoneNumber: malariaCase.phoneNumber,
-              community: malariaCase.community,
-              isPregnant: malariaCase.isPregnant,
-              visitDate: malariaCase.visitDate,
-              facilityName: malariaCase.facilityName,
-              healthWorkerId: malariaCase.healthWorkerId,
-              healthWorkerName: malariaCase.healthWorkerName,
-              symptoms: malariaCase.symptoms,
-              temperature: malariaCase.temperature,
-              illnessDurationDays: malariaCase.illnessDurationDays,
-              testType: malariaCase.testType,
-              rdtResult: malariaCase.rdtResult,
-              microscopyResult: malariaCase.microscopyResult,
-              parasiteSpecies: malariaCase.parasiteSpecies,
-              parasiteDensity: malariaCase.parasiteDensity,
-              diagnosisConfirmed: malariaCase.diagnosisConfirmed,
-              treatmentGiven: malariaCase.treatmentGiven,
-              dosageNotes: malariaCase.dosageNotes,
-              referredToHospital: malariaCase.referredToHospital,
-              followUpRequired: malariaCase.followUpRequired,
-              followUpDate: malariaCase.followUpDate,
-              status: malariaCase.status,
-              updatedAt: new Date(malariaCase.updatedAt),
+              patientFullName: caseInput.patientFullName,
+              age: caseInput.age,
+              sex: caseInput.sex,
+              phoneNumber: caseInput.phoneNumber,
+              community: caseInput.community,
+              isPregnant: caseInput.isPregnant === null ? null : Boolean(caseInput.isPregnant),
+              visitDate: caseInput.visitDate,
+              facilityName: caseInput.facilityName,
+              healthWorkerId: caseInput.healthWorkerId,
+              healthWorkerName: caseInput.healthWorkerName,
+              symptoms: caseInput.symptoms,
+              temperature: caseInput.temperature,
+              illnessDurationDays: caseInput.illnessDurationDays,
+              testType: caseInput.testType,
+              rdtResult: caseInput.rdtResult,
+              microscopyResult: caseInput.microscopyResult,
+              parasiteSpecies: caseInput.parasiteSpecies,
+              parasiteDensity: caseInput.parasiteDensity,
+              diagnosisConfirmed: Boolean(caseInput.diagnosisConfirmed),
+              treatmentGiven: caseInput.treatmentGiven,
+              dosageNotes: caseInput.dosageNotes,
+              referredToHospital: Boolean(caseInput.referredToHospital),
+              followUpRequired: Boolean(caseInput.followUpRequired),
+              followUpDate: caseInput.followUpDate,
+              status: caseInput.status,
+              updatedAt: new Date(caseInput.updatedAt),
             },
           });
-          syncedIds.push(malariaCase.id);
+          console.log(`Successfully synced case ${caseInput.id}`);
+          syncedIds.push(caseInput.id);
         } catch (upsertError) {
-          console.error(`Failed to sync case ${malariaCase.id}:`, upsertError);
-          failedIds.push(malariaCase.id);
+          const errorMessage = upsertError instanceof Error ? upsertError.message : String(upsertError);
+          console.error(`Failed to sync case ${caseInput.id}:`, errorMessage);
+          failedIds.push(caseInput.id);
         }
       }
 
+      console.log(`Sync response - syncedIds: ${JSON.stringify(syncedIds)}, failedIds: ${JSON.stringify(failedIds)}`);
       res.json({ syncedIds, failedIds });
     } catch (error) {
       console.error("Sync cases error:", error);
