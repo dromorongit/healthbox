@@ -37,9 +37,9 @@ export async function createCase(caseData: Omit<MalariaCase, "id" | "createdAt" 
       caseData.followUpRequired,
       caseData.followUpDate,
       caseData.status,
+      now,
+      now,
       "unsynced",
-      now,
-      now,
     ];
     db.runSync(
       `INSERT INTO malaria_cases (
@@ -48,8 +48,8 @@ export async function createCase(caseData: Omit<MalariaCase, "id" | "createdAt" 
         temperature, illnessDurationDays, testType, rdtResult, microscopyResult,
         parasiteSpecies, parasiteDensity, diagnosisConfirmed, treatmentGiven,
         dosageNotes, referredToHospital, followUpRequired, followUpDate, status,
-        syncStatus, createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        createdAt, updatedAt, syncStatus
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       values
     );
 

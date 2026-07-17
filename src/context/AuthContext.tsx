@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthContextType, User, RegisterUserData } from "../types/user";
-import { createUser, findUserById, verifyPassword } from "../database/userRepository";
+import { createUser, findUserById, verifyPassword, updateUserSyncStatus, updateUserServerId } from "../database/userRepository";
+import { registerUserOnServer, loginUserOnServer, ApiError } from "../api/client";
 import * as Crypto from "expo-crypto";
+import NetInfo from "@react-native-community/netinfo";
 
 const SESSION_KEY = "currentUser_id";
 const TOKEN_KEY = "accessToken";
@@ -38,6 +40,43 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const user = await verifyPassword(phoneNumber, password);
       setCurrentUser(user);
       await AsyncStorage.setItem(SESSION_KEY, user.id);
+
+      const netInfo = await NetInfo.fetch();
+      if (netInfo.isConnected === true) {
+        const syncStatus = user.syncStatus ?? "synced";
+        if (syncStatus === "unsynced") {
+          try {
+            await registerUserOnServer({
+              fullName: user.fullName,
+              phoneNumber: user.phoneNumber,
+              facility: user.facility,
+              password: password,
+              role: user.role,
+            });
+            await updateUserSyncStatus(user.id, "synced");
+          } catch (syncError) {
+            const apiError = syncError as ApiError;
+            if (apiError.isAlreadyRegistered === true) {
+              await updateUserSyncStatus(user.id, "synced");
+            } else {
+              await updateUserSyncStatus(user.id, "sync_failed");
+            }
+          }
+        }
+
+        try {
+          const authResponse = await loginUserOnServer(phoneNumber, password);
+          if (authResponse.accessToken !== undefined && authResponse.accessToken !== null) {
+            setAccessToken(authResponse.accessToken);
+            await AsyncStorage.setItem(TOKEN_KEY, authResponse.accessToken);
+          }
+        } catch (apiError) {
+          const error = apiError as ApiError;
+          if (error.isNetworkError !== true) {
+            console.error("Background token refresh failed:", error.message);
+          }
+        }
+      }
     } catch (error) {
       throw error;
     }
@@ -58,10 +97,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         facility: userData.facility,
         role: userData.role,
         createdAt: new Date().toISOString(),
+        syncStatus: "unsynced",
+        serverUserId: null,
       };
       await createUser(user);
       setCurrentUser(user);
       await AsyncStorage.setItem(SESSION_KEY, user.id);
+
+      const netInfo = await NetInfo.fetch();
+      if (netInfo.isConnected === true) {
+        try {
+          const authResponse = await registerUserOnServer(userData);
+          if (authResponse.accessToken !== undefined && authResponse.accessToken !== null) {
+            setAccessToken(authResponse.accessToken);
+            await AsyncStorage.setItem(TOKEN_KEY, authResponse.accessToken);
+          }
+          if (authResponse.user?.id !== undefined && authResponse.user.id !== null) {
+            await updateUserServerId(user.id, authResponse.user.id);
+          }
+        } catch (apiError) {
+          const error = apiError as ApiError;
+          if (error.isAlreadyRegistered === true) {
+            throw new Error("This phone number is already registered. Please log in instead.");
+          }
+          await updateUserSyncStatus(user.id, "sync_failed");
+        }
+      }
     } catch (error) {
       if (error instanceof Error) {
         throw error;

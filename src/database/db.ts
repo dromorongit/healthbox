@@ -53,6 +53,7 @@ export function getDb(): SQLite.SQLiteDatabase {
 export function initDb(): void {
   getDb();
   addSyncStatusColumn();
+  addUserSyncColumns();
 }
 
 export function addSyncStatusColumn(): void {
@@ -64,6 +65,19 @@ export function addSyncStatusColumn(): void {
   }
 }
 
+export function addUserSyncColumns(): void {
+  const db = getDb();
+  const tableInfo = db.getAllSync<{ name: string }>("PRAGMA table_info(users)");
+  const hasSyncStatus = tableInfo.some((column: { name: string }) => column.name === "syncStatus");
+  const hasServerUserId = tableInfo.some((column: { name: string }) => column.name === "serverUserId");
+  if (hasSyncStatus === false) {
+    db.execSync("ALTER TABLE users ADD COLUMN syncStatus TEXT DEFAULT 'unsynced'");
+  }
+  if (hasServerUserId === false) {
+    db.execSync("ALTER TABLE users ADD COLUMN serverUserId TEXT");
+  }
+}
+
 export async function resetDatabase(): Promise<void> {
   try {
     const db = getDb();
@@ -72,46 +86,48 @@ export async function resetDatabase(): Promise<void> {
       DROP TABLE IF EXISTS users;
     `);
     db.execSync(`
-      CREATE TABLE users (
-        id TEXT PRIMARY KEY,
-        fullName TEXT,
-        phoneNumber TEXT UNIQUE,
-        passwordHash TEXT,
-        facility TEXT,
-        role TEXT,
-        createdAt TEXT
-      );
-      CREATE TABLE malaria_cases (
-        id TEXT PRIMARY KEY,
-        patientFullName TEXT,
-        age INTEGER,
-        sex TEXT,
-        phoneNumber TEXT,
-        community TEXT,
-        isPregnant INTEGER,
-        visitDate TEXT,
-        facilityName TEXT,
-        healthWorkerId TEXT,
-        healthWorkerName TEXT,
-        symptoms TEXT,
-        temperature REAL,
-        illnessDurationDays INTEGER,
-        testType TEXT,
-        rdtResult TEXT,
-        microscopyResult TEXT,
-        parasiteSpecies TEXT,
-        parasiteDensity TEXT,
-        diagnosisConfirmed INTEGER,
-        treatmentGiven TEXT,
-        dosageNotes TEXT,
-        referredToHospital INTEGER,
-        followUpRequired INTEGER,
-        followUpDate TEXT,
-        status TEXT,
-        syncStatus TEXT DEFAULT 'unsynced',
-        createdAt TEXT,
-        updatedAt TEXT
-      );
+CREATE TABLE users (
+         id TEXT PRIMARY KEY,
+         fullName TEXT,
+         phoneNumber TEXT UNIQUE,
+         passwordHash TEXT,
+         facility TEXT,
+         role TEXT,
+         createdAt TEXT,
+         syncStatus TEXT DEFAULT 'unsynced',
+         serverUserId TEXT
+       );
+       CREATE TABLE malaria_cases (
+         id TEXT PRIMARY KEY,
+         patientFullName TEXT,
+         age INTEGER,
+         sex TEXT,
+         phoneNumber TEXT,
+         community TEXT,
+         isPregnant INTEGER,
+         visitDate TEXT,
+         facilityName TEXT,
+         healthWorkerId TEXT,
+         healthWorkerName TEXT,
+         symptoms TEXT,
+         temperature REAL,
+         illnessDurationDays INTEGER,
+         testType TEXT,
+         rdtResult TEXT,
+         microscopyResult TEXT,
+         parasiteSpecies TEXT,
+         parasiteDensity TEXT,
+         diagnosisConfirmed INTEGER,
+         treatmentGiven TEXT,
+         dosageNotes TEXT,
+         referredToHospital INTEGER,
+         followUpRequired INTEGER,
+         followUpDate TEXT,
+         status TEXT,
+         createdAt TEXT,
+         updatedAt TEXT,
+         syncStatus TEXT DEFAULT 'unsynced'
+       );
     `);
   } catch (error) {
     if (error instanceof Error) {

@@ -13,13 +13,15 @@ export function canSync(): boolean {
   return now - lastSyncAttempt >= SYNC_DEBOUNCE_MS;
 }
 
-export async function runSync(accessToken: string): Promise<void> {
+export async function runSync(accessToken: string | null): Promise<void> {
   if (canSync() === false) {
     console.log("Sync debounced - skipping");
     return;
   }
 
   lastSyncAttempt = Date.now();
+
+  let authToken = accessToken;
 
   try {
     const cases = await getCasesNeedingSync();
@@ -28,11 +30,20 @@ export async function runSync(accessToken: string): Promise<void> {
       return;
     }
 
+    if (authToken === null) {
+      authToken = await getStoredToken();
+    }
+
+    if (authToken === null) {
+      console.log("No access token available for sync");
+      return;
+    }
+
     for (const malariaCase of cases) {
       await setSyncStatus(malariaCase.id, "syncing");
     }
 
-    const response = await syncCasesToServer(cases, accessToken);
+    const response = await syncCasesToServer(cases, authToken);
 
     for (const id of response.syncedIds) {
       await setSyncStatus(id, "synced");
@@ -50,5 +61,16 @@ export async function runSync(accessToken: string): Promise<void> {
     for (const malariaCase of syncingCases) {
       await setSyncStatus(malariaCase.id, "sync_failed");
     }
+  }
+}
+
+const TOKEN_KEY = "accessToken";
+
+async function getStoredToken(): Promise<string | null> {
+  try {
+    const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
+    return await AsyncStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
   }
 }

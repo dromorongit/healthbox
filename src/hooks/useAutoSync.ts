@@ -11,10 +11,8 @@ export function useAutoSync(accessToken: string | null): void {
       const wasConnected = previousConnected.current;
 
       if (wasConnected === false && isNowConnected === true) {
-        if (accessToken !== null && accessToken !== undefined) {
-          if (canSync()) {
-            runSync(accessToken);
-          }
+        if (canSync()) {
+          runSync(accessToken);
         }
       }
 

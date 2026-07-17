@@ -14,7 +14,7 @@ export async function createUser(user: User): Promise<void> {
   try {
     const db = getDb();
     const stmt = db.prepareSync(
-      "INSERT INTO users (id, fullName, phoneNumber, passwordHash, facility, role, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
+      "INSERT INTO users (id, fullName, phoneNumber, passwordHash, facility, role, createdAt, syncStatus, serverUserId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
     stmt.executeSync([
       user.id,
@@ -24,6 +24,8 @@ export async function createUser(user: User): Promise<void> {
       user.facility,
       user.role,
       user.createdAt,
+      "unsynced",
+      user.serverUserId ?? null,
     ]);
     stmt.finalizeSync();
   } catch (error) {
@@ -79,5 +81,35 @@ export async function verifyPassword(
       throw error;
     }
     throw new Error("Failed to verify password");
+  }
+}
+
+export async function updateUserSyncStatus(
+  id: string,
+  syncStatus: "unsynced" | "syncing" | "synced" | "sync_failed"
+): Promise<void> {
+  try {
+    const db = getDb();
+    db.runSync("UPDATE users SET syncStatus = ? WHERE id = ?", [syncStatus, id]);
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`Failed to update user sync status: ${error.message}`);
+    }
+    throw new Error("Failed to update user sync status");
+  }
+}
+
+export async function updateUserServerId(
+  localId: string,
+  serverUserId: string
+): Promise<void> {
+  try {
+    const db = getDb();
+    db.runSync("UPDATE users SET serverUserId = ?, syncStatus = ? WHERE id = ?", [serverUserId, "synced", localId]);
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`Failed to update user server id: ${error.message}`);
+    }
+    throw new Error("Failed to update user server id");
   }
 }

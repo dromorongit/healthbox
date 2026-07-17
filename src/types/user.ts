@@ -6,6 +6,8 @@ export interface User {
   facility: string;
   role: "field_worker" | "supervisor";
   createdAt: string;
+  syncStatus?: "unsynced" | "syncing" | "synced" | "sync_failed";
+  serverUserId?: string | null;
 }
 
 export interface RegisterUserData {
