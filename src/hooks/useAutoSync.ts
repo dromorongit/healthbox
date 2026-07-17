@@ -1,13 +1,12 @@
-// @ts-nocheck
 import { useEffect, useRef } from "react";
-import NetInfo, { NetInfoState } from "@react-native-community/netinfo";
+import NetInfo from "@react-native-community/netinfo";
 import { runSync, canSync } from "../sync/syncManager";
 
 export function useAutoSync(accessToken: string | null): void {
   const previousConnected = useRef<boolean | null>(null);
 
   useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener((state: NetInfoState) => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
       const isNowConnected = state.isConnected === true;
       const wasConnected = previousConnected.current;
 

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useEffect } from "react";
 import {
   View,
@@ -6,7 +5,8 @@ import {
   ScrollView,
   StyleSheet,
 } from "react-native";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RouteProp } from "@react-navigation/native";
 import { ScreenContainer } from "../components/ScreenContainer";
 import { Button } from "../components/Button";
 import { FormSection } from "../components/FormSection";
@@ -16,9 +16,10 @@ import { MalariaCase } from "../types/case";
 import { AppStackParamList } from "../navigation/AppNavigator";
 import { Ionicons } from "@expo/vector-icons";
 
-type Props = NativeStackScreenProps<AppStackParamList, "CaseDetail">;
-
-export const CaseDetailScreen: React.FC<Props> = ({ route, navigation }) => {
+export function CaseDetailScreen({ route, navigation }: {
+  route: RouteProp<AppStackParamList, "CaseDetail">;
+  navigation: NativeStackNavigationProp<AppStackParamList>;
+}) {
   const caseItem = route.params?.case as MalariaCase;
 
   useEffect(() => {
@@ -104,7 +105,7 @@ export const CaseDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       </ScrollView>
     </ScreenContainer>
   );
-};
+}
 
 const DetailRow: React.FC<{ label: string; value: string }> = ({ label, value }) => (
   <View style={styles.detailRow}>

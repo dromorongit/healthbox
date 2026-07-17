@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from "react";
 import { Text, StyleSheet, Alert, TouchableOpacity } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthContextType, User, RegisterUserData } from "../types/user";

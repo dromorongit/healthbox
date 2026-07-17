@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { HomeScreen } from "../screens/HomeScreen";
@@ -21,8 +20,8 @@ export type AppStackParamList = {
   CaseDetail: { case: MalariaCase };
 };
 
-const Tab = createBottomTabNavigator();
-const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator<AppTabParamList>();
+const Stack = createNativeStackNavigator<AppStackParamList>();
 
 const CasesStack = () => (
   <Stack.Navigator>
