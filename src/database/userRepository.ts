@@ -38,12 +38,14 @@ export async function createUser(user: User): Promise<void> {
 
 export async function findUserByPhone(phoneNumber: string): Promise<User | null> {
   try {
+    const normalizedPhone = phoneNumber.replace(/\D/g, "");
     const db = getDb();
-    const result = db.getAllSync<User>("SELECT * FROM users WHERE phoneNumber = ?", [phoneNumber]);
-    if (result.length === 0) {
+    const result = db.getAllSync<User>("SELECT * FROM users", []);
+    const user = result.find(u => (u.phoneNumber ?? "").replace(/\D/g, "") === normalizedPhone);
+    if (user === undefined) {
       return null;
     }
-    return result[0];
+    return user;
   } catch (error) {
     throw new Error("Failed to find user");
   }

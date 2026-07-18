@@ -37,7 +37,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (phoneNumber: string, password: string): Promise<void> => {
     try {
-      const user = await verifyPassword(phoneNumber, password);
+      const normalizedPhone = phoneNumber.replace(/\D/g, "");
+      const user = await verifyPassword(normalizedPhone, password);
       setCurrentUser(user);
       await AsyncStorage.setItem(SESSION_KEY, user.id);
 
@@ -65,7 +66,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
 
         try {
-          const authResponse = await loginUserOnServer(phoneNumber, password);
+          const authResponse = await loginUserOnServer(normalizedPhone, password);
           if (authResponse.accessToken !== undefined && authResponse.accessToken !== null) {
             setAccessToken(authResponse.accessToken);
             await AsyncStorage.setItem(TOKEN_KEY, authResponse.accessToken);
@@ -89,10 +90,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         userData.password
       );
       const userId = Crypto.randomUUID();
+      const normalizedPhone = userData.phoneNumber.replace(/\D/g, "");
       const user: User = {
         id: userId,
         fullName: userData.fullName,
-        phoneNumber: userData.phoneNumber,
+        phoneNumber: normalizedPhone,
         passwordHash,
         facility: userData.facility,
         role: userData.role,
@@ -107,7 +109,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const netInfo = await NetInfo.fetch();
       if (netInfo.isConnected === true) {
         try {
-          const authResponse = await registerUserOnServer(userData);
+          const authResponse = await registerUserOnServer({
+            ...userData,
+            phoneNumber: normalizedPhone,
+          });
           if (authResponse.accessToken !== undefined && authResponse.accessToken !== null) {
             setAccessToken(authResponse.accessToken);
             await AsyncStorage.setItem(TOKEN_KEY, authResponse.accessToken);

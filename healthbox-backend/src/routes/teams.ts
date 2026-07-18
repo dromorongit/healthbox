@@ -87,10 +87,12 @@ teamsRouter.get(
       return;
     }
 
+    const normalizedSearchPhone = phone.replace(/\D/g, "");
+    console.log("Search phone received:", phone, "normalized:", normalizedSearchPhone);
+
     try {
-      const user = await prisma.user.findFirst({
+      const candidates = await prisma.user.findMany({
         where: {
-          phoneNumber: phone,
           role: "field_worker",
           teamId: null
         },
@@ -101,12 +103,19 @@ teamsRouter.get(
         }
       });
 
-      if (user === null) {
+      console.log("Sample stored phone number:", candidates.length > 0 ? candidates[0].phoneNumber : "No candidates found");
+
+      const user = candidates.find(candidate => {
+        const normalizedStored = (candidate.phoneNumber ?? "").replace(/\D/g, "");
+        return normalizedStored === normalizedSearchPhone;
+      });
+
+      if (user === undefined) {
         res.json({ user: null });
         return;
       }
 
-      res.json({ user });
+      res.json({ user: { id: user.id, fullName: user.fullName, phoneNumber: user.phoneNumber } });
     } catch (error) {
       console.error("Search user error:", error);
       res.status(500).json({ error: "Failed to search users" });
