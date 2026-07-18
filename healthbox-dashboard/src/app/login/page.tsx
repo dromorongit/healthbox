@@ -59,7 +59,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={loading}
-              className="mt-1 block w-full px-3 py-2 border border-[#E0E0E0] rounded-md shadow-sm focus:outline-none focus:ring-[#0F5FCE] focus:border-[#0F5FCE]"
+              className="mt-1 block w-full px-3 py-2 border border-[#E0E0E0] rounded-md shadow-sm focus:outline-none focus:ring-[#0F5FCE] focus:border-[#0F5FCE] text-black"
             />
           </div>
           <div>
@@ -73,7 +73,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={loading}
-              className="mt-1 block w-full px-3 py-2 border border-[#E0E0E0] rounded-md shadow-sm focus:outline-none focus:ring-[#0F5FCE] focus:border-[#0F5FCE]"
+              className="mt-1 block w-full px-3 py-2 border border-[#E0E0E0] rounded-md shadow-sm focus:outline-none focus:ring-[#0F5FCE] focus:border-[#0F5FCE] text-black"
             />
           </div>
           {error && <p className="text-sm text-[#C62828] text-center">{error}</p>}

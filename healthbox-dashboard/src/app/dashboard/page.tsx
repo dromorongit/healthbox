@@ -48,7 +48,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="p-8">
-        <p className="text-center">Loading...</p>
+        <p className="text-center text-black">Loading...</p>
       </div>
     );
   }
@@ -117,8 +117,8 @@ export default function DashboardPage() {
           <ul className="space-y-2">
             {analytics?.casesByFacility.map((facility) => (
               <li key={facility.facility} className="flex justify-between">
-                <span>{facility.facility}</span>
-                <span className="font-bold">{facility.count}</span>
+                <span className="text-black">{facility.facility}</span>
+                <span className="font-bold text-black">{facility.count}</span>
               </li>
             ))}
           </ul>

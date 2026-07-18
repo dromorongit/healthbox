@@ -72,7 +72,15 @@ adminCasesRouter.get("/cases/:id", async (req: Request, res: Response): Promise<
     });
 
     if (malariaCase === null) {
-      res.status(404).json({ error: "Case not found" });
+      const suffix = caseId.slice(-6);
+      const caseBySuffix = await prisma.malariaCase.findFirst({
+        where: { id: { endsWith: suffix } },
+      });
+      if (caseBySuffix === null) {
+        res.status(404).json({ error: "Case not found" });
+        return;
+      }
+      res.json(caseBySuffix);
       return;
     }
 

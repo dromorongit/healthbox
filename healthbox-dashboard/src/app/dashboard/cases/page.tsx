@@ -9,6 +9,14 @@ import Cookies from "js-cookie";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
+function slugifyCase(id: string, facilityName: string): string {
+  const slugified = facilityName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return `${slugified}-${id.slice(-6)}`;
+}
+
 interface MalariaCase {
   id: string;
   patientFullName: string;
@@ -125,19 +133,19 @@ export default function CasesPage() {
           placeholder="Search by patient name"
           value={filters.search}
           onChange={(e) => { setPage(1); setFilters({ ...filters, search: e.target.value }); }}
-          className="px-3 py-2 border border-[#E0E0E0] rounded-md"
+          className="px-3 py-2 border border-[#E0E0E0] rounded-md text-black"
         />
         <input
           type="text"
           placeholder="Facility"
           value={filters.facility}
           onChange={(e) => { setPage(1); setFilters({ ...filters, facility: e.target.value }); }}
-          className="px-3 py-2 border border-[#E0E0E0] rounded-md"
+          className="px-3 py-2 border border-[#E0E0E0] rounded-md text-black"
         />
         <select
           value={filters.status}
           onChange={(e) => { setPage(1); setFilters({ ...filters, status: e.target.value }); }}
-          className="px-3 py-2 border border-[#E0E0E0] rounded-md"
+          className="px-3 py-2 border border-[#E0E0E0] rounded-md text-black"
         >
           <option value="">All Status</option>
           <option value="draft">Draft</option>
@@ -158,7 +166,7 @@ export default function CasesPage() {
       </div>
 
       {loading ? (
-        <p className="text-center">Loading...</p>
+        <p className="text-center text-black">Loading...</p>
       ) : error ? (
         <p className="text-center text-[#C62828]">{error}</p>
       ) : cases.length === 0 ? (
@@ -182,16 +190,16 @@ export default function CasesPage() {
                 {cases.map((c) => (
                   <tr key={c.id} className="hover:bg-[#F5F6F8]">
                     <td className="px-6 py-4">
-                      <Link href={`/dashboard/cases/${c.id}`} className="text-[#0F5FCE] hover:underline">
+                      <Link href={`/dashboard/cases/${slugifyCase(c.id, c.facilityName)}`} className="text-[#0F5FCE] hover:underline">
                         {c.patientFullName}
                       </Link>
                     </td>
-                    <td className="px-6 py-4">{c.facilityName}</td>
-                    <td className="px-6 py-4">{c.visitDate}</td>
-                    <td className="px-6 py-4">{c.testType}</td>
-                    <td className="px-6 py-4">{c.rdtResult}</td>
-                    <td className="px-6 py-4">{c.microscopyResult}</td>
-                    <td className="px-6 py-4 capitalize">{c.status}</td>
+                    <td className="px-6 py-4 text-black">{c.facilityName}</td>
+                    <td className="px-6 py-4 text-black">{c.visitDate}</td>
+                    <td className="px-6 py-4 text-black">{c.testType}</td>
+                    <td className="px-6 py-4 text-black">{c.rdtResult}</td>
+                    <td className="px-6 py-4 text-black">{c.microscopyResult}</td>
+                    <td className="px-6 py-4 capitalize text-black">{c.status}</td>
                   </tr>
                 ))}
               </tbody>
@@ -206,14 +214,14 @@ export default function CasesPage() {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1 border border-[#E0E0E0] rounded disabled:opacity-50"
+                className="px-3 py-1 border border-[#E0E0E0] rounded disabled:opacity-50 text-black"
               >
                 Prev
               </button>
               <button
                 onClick={() => setPage((p) => p + 1)}
                 disabled={page >= Math.ceil(total / limit)}
-                className="px-3 py-1 border border-[#E0E0E0] rounded disabled:opacity-50"
+                className="px-3 py-1 border border-[#E0E0E0] rounded disabled:opacity-50 text-black"
               >
                 Next
               </button>
