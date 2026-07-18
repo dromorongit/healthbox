@@ -653,17 +653,58 @@ export async function getMyTeam(accessToken: string): Promise<Team | null> {
       throw new Error(errorData.error ?? "Failed to get team");
     }
 
-    const data = (await response.json()) as MyTeamSuccessResponse | MyTeamResponse;
-    
-    if (data.hasTeam === false) {
-      return null;
+const data = (await response.json()) as MyTeamSuccessResponse | MyTeamResponse;
+     
+     if (data.hasTeam === false) {
+       return null;
+     }
+     
+     return data.team;
+   } catch (error) {
+     const err = error as Error;
+     if (isNetworkError(err)) {
+       const networkError = new Error("Network error. Please connect to the internet to view your overview.") as NetworkError;
+       networkError.isNetworkError = true;
+       throw networkError;
+     }
+     throw err;
+   }
+}
+
+export async function updateTeamName(
+  teamId: string,
+  name: string,
+  accessToken: string
+): Promise<Team> {
+  try {
+    const response = await fetch(`${API_URL}/api/teams/${teamId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ name }),
+    });
+
+    if (response.ok === false) {
+      if (response.status === 401) {
+        throw createAuthInvalidError();
+      }
+      let errorData: { error?: string };
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = {};
+      }
+      throw new Error(errorData.error ?? "Failed to update team name");
     }
-    
+
+    const data = (await response.json()) as { success: boolean; team: Team };
     return data.team;
   } catch (error) {
     const err = error as Error;
     if (isNetworkError(err)) {
-      const networkError = new Error("Network error. Please connect to the internet to view your overview.") as NetworkError;
+      const networkError = new Error("Network error. Please connect to the internet to update team name.") as NetworkError;
       networkError.isNetworkError = true;
       throw networkError;
     }

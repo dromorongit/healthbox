@@ -22,20 +22,22 @@ import {
 } from "../../api/client";
 
 export const SupervisorHomeScreen: React.FC<any> = () => {
-  const { currentUser, accessToken, logout, handleInvalidSession } = useAuth();
+   const { currentUser, accessToken, isLoading: authLoading, logout, handleInvalidSession } = useAuth();
   const [overview, setOverview] = useState<SupervisorOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadOverview = useCallback(async () => {
-    if (accessToken === null || accessToken === undefined) {
-      setLoading(false);
-      setError("Please log in to view your overview");
-      return;
-    }
+const loadOverview = useCallback(async () => {
+     if (accessToken === null || accessToken === undefined) {
+       if (authLoading === false) {
+         setLoading(false);
+         setError("Please log in to view your overview");
+       }
+       return;
+     }
 
-    try {
+     try {
       setLoading(true);
       setError(null);
       const data = await getSupervisorOverview(accessToken);
@@ -68,11 +70,11 @@ export const SupervisorHomeScreen: React.FC<any> = () => {
     setRefreshing(false);
   };
 
-  const handleLogout = async () => {
+const handleLogout = async () => {
     await logout();
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <ScreenContainer>
         <View style={styles.loadingContainer}>

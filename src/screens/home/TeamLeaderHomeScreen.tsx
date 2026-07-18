@@ -23,6 +23,7 @@ import {
   searchFieldWorkerByPhone,
   addTeamMember,
   removeTeamMember,
+  updateTeamName,
   Team,
   TeamLeaderOverview,
   NetworkError,
@@ -32,7 +33,7 @@ import {
 } from "../../api/client";
 
 export const TeamLeaderHomeScreen: React.FC<any> = () => {
-  const { currentUser, accessToken, logout, handleInvalidSession } = useAuth();
+   const { currentUser, accessToken, isLoading: authLoading, logout, handleInvalidSession } = useAuth();
   const [overview, setOverview] = useState<TeamLeaderOverview | null>(null);
   const [myTeam, setMyTeam] = useState<Team | null>(null);
   const [loading, setLoading] = useState(true);
@@ -44,16 +45,21 @@ export const TeamLeaderHomeScreen: React.FC<any> = () => {
   const [phoneSearch, setPhoneSearch] = useState("");
   const [searchResult, setSearchResult] = useState<{ id: string; fullName: string; phoneNumber: string } | null>(null);
   const [searching, setSearching] = useState(false);
-  const [addingMember, setAddingMember] = useState(false);
+const [addingMember, setAddingMember] = useState(false);
+  const [editingTeamName, setEditingTeamName] = useState(false);
+  const [editedTeamName, setEditedTeamName] = useState("");
+  const [savingTeamName, setSavingTeamName] = useState(false);
 
   const loadOverview = useCallback(async () => {
-    if (accessToken === null || accessToken === undefined) {
-      setLoading(false);
-      setError("Please log in to view your overview");
-      return;
-    }
+     if (accessToken === null || accessToken === undefined) {
+       if (authLoading === false) {
+         setLoading(false);
+         setError("Please log in to view your overview");
+       }
+       return;
+     }
 
-    try {
+     try {
       setLoading(true);
       setError(null);
       
@@ -129,6 +135,36 @@ export const TeamLeaderHomeScreen: React.FC<any> = () => {
       }
     } finally {
       setCreatingTeam(false);
+    }
+  };
+
+  const handleSaveTeamName = async () => {
+    if (editedTeamName.trim() === "" || myTeam === null || accessToken === null || accessToken === undefined) {
+      return;
+    }
+
+    setSavingTeamName(true);
+    try {
+      const updatedTeam = await updateTeamName(myTeam.id, editedTeamName.trim(), accessToken);
+      setMyTeam(updatedTeam);
+      setEditingTeamName(false);
+    } catch (err) {
+      if (isAuthInvalidError(err as Error)) {
+        await handleInvalidSession();
+        return;
+      }
+      if (err instanceof Error) {
+        Alert.alert("Error", err.message);
+      }
+    } finally {
+      setSavingTeamName(false);
+    }
+  };
+
+  const handleEditTeamName = () => {
+    if (myTeam !== null) {
+      setEditedTeamName(myTeam.name);
+      setEditingTeamName(true);
     }
   };
 
@@ -218,11 +254,11 @@ export const TeamLeaderHomeScreen: React.FC<any> = () => {
     );
   };
 
-  const handleLogout = async () => {
+const handleLogout = async () => {
     await logout();
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <ScreenContainer>
         <View style={styles.loadingContainer}>
@@ -287,12 +323,17 @@ export const TeamLeaderHomeScreen: React.FC<any> = () => {
         <Text style={styles.greeting}>
           Hello{currentUser?.fullName ? `, ${currentUser.fullName}` : ""}
         </Text>
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+<TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
           <Ionicons name="log-out" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.teamName}>{myTeam.name}</Text>
+      <View style={styles.teamNameRow}>
+        <Text style={styles.teamName}>{myTeam.name}</Text>
+        <TouchableOpacity onPress={handleEditTeamName} style={styles.editButton}>
+          <Ionicons name="pencil" size={20} color={colors.primaryBlue} />
+        </TouchableOpacity>
+      </View>
 
       {overview !== null ? (
         <View style={styles.statsContainer}>
@@ -312,27 +353,27 @@ export const TeamLeaderHomeScreen: React.FC<any> = () => {
             </View>
           </View>
 
-<View style={styles.resultSection}>
-             <Text style={styles.sectionTitle}>Test Results Breakdown</Text>
-             <View style={styles.resultGrid}>
-               <View style={[styles.resultCard, { backgroundColor: colors.accentGold + "20" }]}>
-                 <Text style={styles.resultCardValue}>{overview.team.rdtPositive}</Text>
-                 <Text style={styles.resultCardLabel}>RDT Positive</Text>
-               </View>
-               <View style={[styles.resultCard, { backgroundColor: colors.accentGold + "10" }]}>
-                 <Text style={styles.resultCardValue}>{overview.team.rdtNegative}</Text>
-                 <Text style={styles.resultCardLabel}>RDT Negative</Text>
-               </View>
-               <View style={[styles.resultCard, { backgroundColor: colors.primaryBlue + "20" }]}>
-                 <Text style={styles.resultCardValue}>{overview.team.microscopyPositive}</Text>
-                 <Text style={styles.resultCardLabel}>Microscopy Positive</Text>
-               </View>
-               <View style={[styles.resultCard, { backgroundColor: colors.primaryBlue + "10" }]}>
-                 <Text style={styles.resultCardValue}>{overview.team.microscopyNegative}</Text>
-                 <Text style={styles.resultCardLabel}>Microscopy Negative</Text>
-               </View>
-             </View>
-           </View>
+          <View style={styles.resultSection}>
+            <Text style={styles.sectionTitle}>Test Results Breakdown</Text>
+            <View style={styles.resultGrid}>
+              <View style={[styles.resultCard, { backgroundColor: colors.accentGold + "20" }]}>
+                <Text style={styles.resultCardValue}>{overview.team.rdtPositive}</Text>
+                <Text style={styles.resultCardLabel}>RDT Positive</Text>
+              </View>
+              <View style={[styles.resultCard, { backgroundColor: colors.accentGold + "10" }]}>
+                <Text style={styles.resultCardValue}>{overview.team.rdtNegative}</Text>
+                <Text style={styles.resultCardLabel}>RDT Negative</Text>
+              </View>
+              <View style={[styles.resultCard, { backgroundColor: colors.primaryBlue + "20" }]}>
+                <Text style={styles.resultCardValue}>{overview.team.microscopyPositive}</Text>
+                <Text style={styles.resultCardLabel}>Microscopy Positive</Text>
+              </View>
+              <View style={[styles.resultCard, { backgroundColor: colors.primaryBlue + "10" }]}>
+                <Text style={styles.resultCardValue}>{overview.team.microscopyNegative}</Text>
+                <Text style={styles.resultCardLabel}>Microscopy Negative</Text>
+              </View>
+            </View>
+          </View>
         </View>
       ) : null}
 
@@ -344,9 +385,9 @@ export const TeamLeaderHomeScreen: React.FC<any> = () => {
           </TouchableOpacity>
         </View>
 
-{overview !== null && overview.team.members.length === 0 ? (
-           <Text style={styles.emptyText}>No members yet. Add your first team member.</Text>
-         ) : (
+        {overview !== null && overview.team.members.length === 0 ? (
+          <Text style={styles.emptyText}>No members yet. Add your first team member.</Text>
+        ) : (
           <FlatList
             data={overview?.team.members ?? []}
             keyExtractor={(item) => item.id}
@@ -426,6 +467,37 @@ export const TeamLeaderHomeScreen: React.FC<any> = () => {
           </View>
         </View>
       ) : null}
+
+      {editingTeamName ? (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Edit Team Name</Text>
+            <TextInput
+              style={styles.teamNameInput}
+              placeholder="Team name"
+              value={editedTeamName}
+              onChangeText={setEditedTeamName}
+            />
+            <TouchableOpacity
+              style={[styles.createButton, savingTeamName && styles.disabledButton]}
+              onPress={handleSaveTeamName}
+              disabled={savingTeamName}
+            >
+              {savingTeamName ? (
+                <ActivityIndicator color={colors.background} />
+              ) : (
+                <Text style={styles.createButtonText}>Save</Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setEditingTeamName(false)}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : null}
     </ScreenContainer>
   );
 };
@@ -461,6 +533,15 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     padding: 8,
+  },
+  teamNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  editButton: {
+    padding: 4,
+    marginLeft: 8,
   },
   teamName: {
     fontSize: typography.sizes.h3,

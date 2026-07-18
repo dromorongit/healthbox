@@ -9,7 +9,11 @@ interface CreateTeamBody {
 }
 
 interface AddMemberBody {
-  userId: string;
+   userId: string;
+}
+
+interface UpdateTeamBody {
+   name: string;
 }
 
 teamsRouter.post(
@@ -295,7 +299,7 @@ teamsRouter.get(
         }
       });
 
-      const caseCountMap = new Map(caseCounts.map(c => [c.healthWorkerId, c._count._all as number]));
+const caseCountMap = new Map(caseCounts.map(c => [c.healthWorkerId, c._count._all as number]));
 
       res.json({
         hasTeam: true,
@@ -317,4 +321,57 @@ teamsRouter.get(
       res.status(500).json({ error: "Failed to get team" });
     }
   }
+);
+
+teamsRouter.patch(
+   "/teams/:teamId",
+   authMiddleware,
+   requireRole(["team_leader"]),
+   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+     if (req.userId === undefined || req.userId === null) {
+       res.status(401).json({ error: "User not authenticated" });
+       return;
+     }
+
+     const teamId = req.params.teamId;
+     const body = req.body as UpdateTeamBody;
+
+     if (body.name === undefined || body.name === null || body.name === "") {
+       res.status(400).json({ error: "Team name is required" });
+       return;
+     }
+
+     try {
+       const team = await prisma.team.findUnique({
+         where: { id: teamId }
+       });
+
+       if (team === null) {
+         res.status(404).json({ error: "Team not found" });
+         return;
+       }
+
+       if (team.teamLeaderId !== req.userId) {
+         res.status(403).json({ error: "Only the team leader can update the team name" });
+         return;
+       }
+
+       const updatedTeam = await prisma.team.update({
+         where: { id: teamId },
+         data: { name: body.name.trim() }
+       });
+
+       res.json({
+         success: true,
+         team: {
+           id: updatedTeam.id,
+           name: updatedTeam.name,
+           facility: updatedTeam.facility
+         }
+       });
+     } catch (error) {
+       console.error("Update team error:", error);
+       res.status(500).json({ error: "Failed to update team name" });
+     }
+   }
 );

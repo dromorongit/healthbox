@@ -29,7 +29,7 @@ interface RecentCase {
 }
 
 export const FieldWorkerHomeScreen: React.FC<any> = ({ navigation }) => {
-  const { currentUser, accessToken, logout, handleInvalidSession } = useAuth();
+  const { currentUser, accessToken, isLoading: authLoading, logout, handleInvalidSession } = useAuth();
   const [overview, setOverview] = useState<FieldWorkerOverview | null>(null);
   const [recentCases, setRecentCases] = useState<RecentCase[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,8 +38,10 @@ export const FieldWorkerHomeScreen: React.FC<any> = ({ navigation }) => {
 
   const loadOverview = useCallback(async () => {
     if (accessToken === null || accessToken === undefined) {
-      setLoading(false);
-      setError("Please log in to view your overview");
+      if (authLoading === false) {
+        setLoading(false);
+        setError("Please log in to view your overview");
+      }
       return;
     }
 
@@ -81,11 +83,11 @@ export const FieldWorkerHomeScreen: React.FC<any> = ({ navigation }) => {
     navigation.navigate("CaseList" as never);
   };
 
-  const handleLogout = async () => {
+const handleLogout = async () => {
     await logout();
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <ScreenContainer>
         <View style={styles.loadingContainer}>
