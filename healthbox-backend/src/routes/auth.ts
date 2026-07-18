@@ -10,7 +10,7 @@ interface RegisterBody {
   phoneNumber: string;
   password: string;
   facility: string;
-  role: "field_worker" | "supervisor";
+  role: "field_worker" | "supervisor" | "team_leader";
 }
 
 interface LoginBody {

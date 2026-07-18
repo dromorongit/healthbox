@@ -7,13 +7,24 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  fullName     String
-  phoneNumber  String   @unique
+  id          String   @id @default(uuid())
+  fullName    String
+  phoneNumber String   @unique
   passwordHash String
+  facility    String
+  role        String
+  teamId      String?
+  createdAt   DateTime @default(now())
+  ledTeam     Team?    @relation("TeamLeader")
+}
+
+model Team {
+  id           String   @id @default(uuid())
+  name         String
+  teamLeaderId String   @unique
   facility     String
-  role         String
   createdAt    DateTime @default(now())
+  teamLeader   User     @relation("TeamLeader", fields: [teamLeaderId], references: [id])
 }
 
 model AdminUser {

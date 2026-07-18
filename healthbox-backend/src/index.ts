@@ -5,6 +5,8 @@ import { authRouter } from "./routes/auth";
 import { syncRouter } from "./routes/sync";
 import { adminAuthRouter } from "./routes/adminAuth";
 import { adminCasesRouter } from "./routes/adminCases";
+import { teamsRouter } from "./routes/teams";
+import { overviewRouter } from "./routes/overview";
 
 dotenv.config();
 
@@ -22,6 +24,8 @@ app.use("/api/auth", authRouter);
 app.use("/api/sync", syncRouter);
 app.use("/api/admin/auth", adminAuthRouter);
 app.use("/api/admin", adminCasesRouter);
+app.use("/api", teamsRouter);
+app.use("/api", overviewRouter);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
