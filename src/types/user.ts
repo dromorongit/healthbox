@@ -27,4 +27,5 @@ export interface AuthContextType {
   login: (phoneNumber: string, password: string) => Promise<void>;
   register: (userData: RegisterUserData) => Promise<void>;
   logout: () => Promise<void>;
+  handleInvalidSession: () => Promise<void>;
 }

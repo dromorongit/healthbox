@@ -259,7 +259,7 @@ teamsRouter.get(
       });
 
       if (team === null) {
-        res.status(404).json({ error: "No team found for this leader" });
+        res.json({ hasTeam: false });
         return;
       }
 
@@ -289,6 +289,7 @@ teamsRouter.get(
       const caseCountMap = new Map(caseCounts.map(c => [c.healthWorkerId, c._count._all as number]));
 
       res.json({
+        hasTeam: true,
         team: {
           id: team.id,
           name: team.name,

@@ -91,7 +91,7 @@ overviewRouter.get(
       });
 
       if (team === null) {
-        res.status(404).json({ error: "No team found for this leader" });
+        res.json({ hasTeam: false });
         return;
       }
 
@@ -153,6 +153,7 @@ overviewRouter.get(
       });
 
       res.json({
+        hasTeam: true,
         personalStats: {
           total: allCases.filter(c => c.healthWorkerId === req.userId).length,
           byStatus: {

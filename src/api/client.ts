@@ -12,6 +12,20 @@ export interface SyncError extends Error {
   isNetworkError?: boolean;
 }
 
+export interface AuthInvalidError extends Error {
+  type: "auth_invalid";
+}
+
+export function createAuthInvalidError(): AuthInvalidError {
+  const error = new Error("Invalid token") as AuthInvalidError;
+  error.type = "auth_invalid";
+  return error;
+}
+
+export function isAuthInvalidError(error: Error): error is AuthInvalidError {
+  return (error as AuthInvalidError).type === "auth_invalid";
+}
+
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
@@ -44,7 +58,15 @@ export async function syncCasesToServer(
     });
 
     if (response.ok === false) {
-      const errorData = await response.json();
+      if (response.status === 401) {
+        throw createAuthInvalidError();
+      }
+      let errorData: { error?: string };
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = {};
+      }
       throw new Error(errorData.error ?? "Failed to sync cases") as SyncError;
     }
 
@@ -206,7 +228,15 @@ export async function createTeam(
     });
 
     if (response.ok === false) {
-      const errorData = await response.json();
+      if (response.status === 401) {
+        throw createAuthInvalidError();
+      }
+      let errorData: { error?: string };
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = {};
+      }
       throw new Error(errorData.error ?? "Failed to create team");
     }
 
@@ -239,7 +269,15 @@ export async function searchFieldWorkerByPhone(
     }
 
     if (response.ok === false) {
-      const errorData = await response.json();
+      if (response.status === 401) {
+        throw createAuthInvalidError();
+      }
+      let errorData: { error?: string };
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = {};
+      }
       throw new Error(errorData.error ?? "Search failed");
     }
 
@@ -271,7 +309,15 @@ export async function addTeamMember(
     });
 
     if (response.ok === false) {
-      const errorData = await response.json();
+      if (response.status === 401) {
+        throw createAuthInvalidError();
+      }
+      let errorData: { error?: string };
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = {};
+      }
       throw new Error(errorData.error ?? "Failed to add team member");
     }
 
@@ -301,7 +347,15 @@ export async function removeTeamMember(
     });
 
     if (response.ok === false) {
-      const errorData = await response.json();
+      if (response.status === 401) {
+        throw createAuthInvalidError();
+      }
+      let errorData: { error?: string };
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = {};
+      }
       throw new Error(errorData.error ?? "Failed to remove team member");
     }
 
@@ -317,6 +371,15 @@ export async function removeTeamMember(
   }
 }
 
+export interface MyTeamResponse {
+  hasTeam: false;
+}
+
+export interface MyTeamSuccessResponse {
+  hasTeam: true;
+  team: Team;
+}
+
 export async function getMyTeam(accessToken: string): Promise<Team | null> {
   try {
     const response = await fetch(`${API_URL}/api/teams/my-team`, {
@@ -326,16 +389,27 @@ export async function getMyTeam(accessToken: string): Promise<Team | null> {
       },
     });
 
-    if (response.status === 404) {
-      return null;
+    if (response.status === 401) {
+      throw createAuthInvalidError();
     }
 
-    if (response.ok === false) {
-      const errorData = await response.json();
+    if (response.ok === false && response.status !== 200) {
+      let errorData: { error?: string };
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = {};
+      }
       throw new Error(errorData.error ?? "Failed to get team");
     }
 
-    return (await response.json()) as Team;
+    const data = (await response.json()) as MyTeamSuccessResponse | MyTeamResponse;
+    
+    if (data.hasTeam === false) {
+      return null;
+    }
+    
+    return data.team;
   } catch (error) {
     const err = error as Error;
     if (isNetworkError(err)) {
@@ -357,7 +431,15 @@ export async function getFieldWorkerOverview(accessToken: string): Promise<Field
     });
 
     if (response.ok === false) {
-      const errorData = await response.json();
+      if (response.status === 401) {
+        throw createAuthInvalidError();
+      }
+      let errorData: { error?: string };
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = {};
+      }
       throw new Error(errorData.error ?? "Failed to get overview");
     }
 
@@ -373,6 +455,60 @@ export async function getFieldWorkerOverview(accessToken: string): Promise<Field
   }
 }
 
+export class NoTeamError extends Error {
+  constructor() {
+    super("No team found");
+    this.name = "NoTeamError";
+  }
+}
+
+export function isNoTeamError(error: Error): error is NoTeamError {
+  return error.name === "NoTeamError";
+}
+
+interface TeamLeaderOverviewResponse {
+  hasTeam: boolean;
+  personalStats?: {
+    total: number;
+    byStatus: { draft: number; submitted: number };
+    byResult: {
+      rdt: { positive: number; negative: number };
+      microscopy: { positive: number; negative: number };
+    };
+    recentCases: Array<{
+      id: string;
+      patientFullName: string;
+      visitDate: string;
+      rdtResult?: string;
+      microscopyResult?: string;
+      status: string;
+      healthWorkerId: string;
+    }>;
+  };
+  team?: {
+    id: string;
+    name: string;
+    facility: string;
+    teamLeader: {
+      id: string;
+      fullName: string;
+      phoneNumber: string;
+    };
+    memberCount: number;
+  };
+  members?: Array<{
+    id: string;
+    fullName: string;
+    phoneNumber: string;
+    caseCount: number;
+  }>;
+  teamTotals?: {
+    totalCases: number;
+    rdtPositive: number;
+    rdtNegative: number;
+  };
+}
+
 export async function getTeamLeaderOverview(accessToken: string): Promise<TeamLeaderOverview> {
   try {
     const response = await fetch(`${API_URL}/api/overview/team-leader`, {
@@ -382,12 +518,49 @@ export async function getTeamLeaderOverview(accessToken: string): Promise<TeamLe
       },
     });
 
-    if (response.ok === false) {
-      const errorData = await response.json();
-      throw new Error(errorData.error ?? "Failed to get overview");
+    if (response.status === 401) {
+      throw createAuthInvalidError();
     }
 
-    return (await response.json()) as TeamLeaderOverview;
+    if (response.ok === false && response.status !== 200) {
+      let errorData: { error?: string };
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = {};
+      }
+      throw new Error(errorData.error ?? "Failed to get overview") as ApiError;
+    }
+
+    const data = (await response.json()) as TeamLeaderOverviewResponse;
+    
+    if (data.hasTeam === false) {
+      throw new NoTeamError();
+    }
+
+    return {
+      personal: {
+        totalCases: data.personalStats?.total ?? 0,
+        draftCount: data.personalStats?.byStatus.draft ?? 0,
+        submittedCount: data.personalStats?.byStatus.submitted ?? 0,
+        rdtPositive: data.personalStats?.byResult.rdt.positive ?? 0,
+        rdtNegative: data.personalStats?.byResult.rdt.negative ?? 0,
+        microscopyPositive: data.personalStats?.byResult.microscopy.positive ?? 0,
+        microscopyNegative: data.personalStats?.byResult.microscopy.negative ?? 0,
+      },
+      team: {
+        id: data.team?.id ?? "",
+        name: data.team?.name ?? "",
+        totalCases: data.teamTotals?.totalCases ?? 0,
+        draftCount: 0,
+        submittedCount: 0,
+        rdtPositive: data.teamTotals?.rdtPositive ?? 0,
+        rdtNegative: data.teamTotals?.rdtNegative ?? 0,
+        microscopyPositive: 0,
+        microscopyNegative: 0,
+        members: data.members ?? [],
+      },
+    } as TeamLeaderOverview;
   } catch (error) {
     const err = error as Error;
     if (isNetworkError(err)) {
@@ -409,7 +582,15 @@ export async function getSupervisorOverview(accessToken: string): Promise<Superv
     });
 
     if (response.ok === false) {
-      const errorData = await response.json();
+      if (response.status === 401) {
+        throw createAuthInvalidError();
+      }
+      let errorData: { error?: string };
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = {};
+      }
       throw new Error(errorData.error ?? "Failed to get overview");
     }
 

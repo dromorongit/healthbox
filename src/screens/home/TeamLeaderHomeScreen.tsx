@@ -26,10 +26,13 @@ import {
   Team,
   TeamLeaderOverview,
   NetworkError,
+  isAuthInvalidError,
+  NoTeamError,
+  isNoTeamError,
 } from "../../api/client";
 
 export const TeamLeaderHomeScreen: React.FC<any> = () => {
-  const { currentUser, accessToken, logout } = useAuth();
+  const { currentUser, accessToken, logout, handleInvalidSession } = useAuth();
   const [overview, setOverview] = useState<TeamLeaderOverview | null>(null);
   const [myTeam, setMyTeam] = useState<Team | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,13 +56,33 @@ export const TeamLeaderHomeScreen: React.FC<any> = () => {
     try {
       setLoading(true);
       setError(null);
-      const [teamData, overviewData] = await Promise.all([
-        getMyTeam(accessToken),
-        getTeamLeaderOverview(accessToken),
-      ]);
+      
+      const teamData = await getMyTeam(accessToken);
       setMyTeam(teamData);
-      setOverview(overviewData);
+
+      if (teamData === null) {
+        setOverview(null);
+        return;
+      }
+
+      try {
+        const overviewData = await getTeamLeaderOverview(accessToken);
+        setOverview(overviewData);
+      } catch (overviewErr) {
+        if (isNoTeamError(overviewErr as Error)) {
+          setOverview(null);
+        } else if (isAuthInvalidError(overviewErr as Error)) {
+          await handleInvalidSession();
+          return;
+        } else {
+          throw overviewErr;
+        }
+      }
     } catch (err) {
+      if (isAuthInvalidError(err as Error)) {
+        await handleInvalidSession();
+        return;
+      }
       const error = err as NetworkError;
       if (error.isNetworkError === true) {
         setError("Connect to the internet to view your overview");
@@ -97,6 +120,10 @@ export const TeamLeaderHomeScreen: React.FC<any> = () => {
       setTeamName("");
       await loadOverview();
     } catch (err) {
+      if (isAuthInvalidError(err as Error)) {
+        await handleInvalidSession();
+        return;
+      }
       if (err instanceof Error) {
         Alert.alert("Error", err.message);
       }
@@ -119,6 +146,10 @@ export const TeamLeaderHomeScreen: React.FC<any> = () => {
       const result = await searchFieldWorkerByPhone(phoneSearch.trim(), accessToken);
       setSearchResult(result);
     } catch (err) {
+      if (isAuthInvalidError(err as Error)) {
+        await handleInvalidSession();
+        return;
+      }
       if (err instanceof Error) {
         Alert.alert("Search Error", err.message);
       }
@@ -140,6 +171,10 @@ export const TeamLeaderHomeScreen: React.FC<any> = () => {
       setShowAddMember(false);
       await loadOverview();
     } catch (err) {
+      if (isAuthInvalidError(err as Error)) {
+        await handleInvalidSession();
+        return;
+      }
       if (err instanceof Error) {
         Alert.alert("Error", err.message);
       }
@@ -169,6 +204,10 @@ export const TeamLeaderHomeScreen: React.FC<any> = () => {
               await removeTeamMember(myTeam.id, memberId, accessToken);
               await loadOverview();
             } catch (err) {
+              if (isAuthInvalidError(err as Error)) {
+                await handleInvalidSession();
+                return;
+              }
               if (err instanceof Error) {
                 Alert.alert("Error", err.message);
               }

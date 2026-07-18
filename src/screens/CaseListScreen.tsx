@@ -15,9 +15,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { getAllCases, getUnsyncedCount } from "../database/caseRepository";
 import { MalariaCase } from "../types/case";
-import { runSync } from "../sync/syncManager";
+import { runSync, canSync } from "../sync/syncManager";
 import { useAuth } from "../context/AuthContext";
 import { useAutoSync } from "../hooks/useAutoSync";
+import { isAuthInvalidError } from "../api/client";
 
 export const CaseListScreen: React.FC<any> = ({ navigation }) => {
   const [cases, setCases] = useState<MalariaCase[]>([]);
@@ -26,9 +27,9 @@ export const CaseListScreen: React.FC<any> = ({ navigation }) => {
   const [syncing, setSyncing] = useState(false);
   const [lastSynced, setLastSynced] = useState<string | null>(null);
   const [unsyncedCount, setUnsyncedCount] = useState(0);
-  const { currentUser, accessToken } = useAuth();
+const { currentUser, accessToken, handleInvalidSession } = useAuth();
 
-  useAutoSync(accessToken);
+  useAutoSync(accessToken, handleInvalidSession);
 
   const loadCases = useCallback(async () => {
     try {
@@ -75,11 +76,14 @@ export const CaseListScreen: React.FC<any> = ({ navigation }) => {
     }
     setSyncing(true);
     try {
-      await runSync(accessToken);
+      await runSync(accessToken, handleInvalidSession);
       setLastSynced(new Date().toLocaleTimeString());
       await loadCases();
       await loadUnsyncedCount();
     } catch (error) {
+      if (isAuthInvalidError(error as Error)) {
+        return;
+      }
       console.error("Sync failed:", error);
     } finally {
       setSyncing(false);

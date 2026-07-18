@@ -18,6 +18,8 @@ import {
   getFieldWorkerOverview,
   FieldWorkerOverview,
   NetworkError,
+  AuthInvalidError,
+  isAuthInvalidError,
 } from "../../api/client";
 
 interface RecentCase {
@@ -27,7 +29,7 @@ interface RecentCase {
 }
 
 export const FieldWorkerHomeScreen: React.FC<any> = ({ navigation }) => {
-  const { currentUser, accessToken, logout } = useAuth();
+  const { currentUser, accessToken, logout, handleInvalidSession } = useAuth();
   const [overview, setOverview] = useState<FieldWorkerOverview | null>(null);
   const [recentCases, setRecentCases] = useState<RecentCase[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,6 +50,10 @@ export const FieldWorkerHomeScreen: React.FC<any> = ({ navigation }) => {
       setOverview(data);
       setRecentCases([]);
     } catch (err) {
+      if (isAuthInvalidError(err as Error)) {
+        await handleInvalidSession();
+        return;
+      }
       const error = err as NetworkError;
       if (error.isNetworkError === true) {
         setError("Connect to the internet to view your overview");

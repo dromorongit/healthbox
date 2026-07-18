@@ -2,7 +2,10 @@ import { useEffect, useRef } from "react";
 import NetInfo from "@react-native-community/netinfo";
 import { runSync, canSync } from "../sync/syncManager";
 
-export function useAutoSync(accessToken: string | null): void {
+export function useAutoSync(
+  accessToken: string | null,
+  onAuthInvalid?: () => Promise<void>
+): void {
   const previousConnected = useRef<boolean | null>(null);
 
   useEffect(() => {
@@ -12,7 +15,7 @@ export function useAutoSync(accessToken: string | null): void {
 
       if (wasConnected === false && isNowConnected === true) {
         if (canSync()) {
-          runSync(accessToken);
+          runSync(accessToken, onAuthInvalid);
         }
       }
 
@@ -22,5 +25,5 @@ export function useAutoSync(accessToken: string | null): void {
     return () => {
       unsubscribe();
     };
-  }, [accessToken]);
+  }, [accessToken, onAuthInvalid]);
 }

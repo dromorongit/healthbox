@@ -18,10 +18,11 @@ import {
   getSupervisorOverview,
   SupervisorOverview,
   NetworkError,
+  isAuthInvalidError,
 } from "../../api/client";
 
 export const SupervisorHomeScreen: React.FC<any> = () => {
-  const { currentUser, accessToken, logout } = useAuth();
+  const { currentUser, accessToken, logout, handleInvalidSession } = useAuth();
   const [overview, setOverview] = useState<SupervisorOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -40,6 +41,10 @@ export const SupervisorHomeScreen: React.FC<any> = () => {
       const data = await getSupervisorOverview(accessToken);
       setOverview(data);
     } catch (err) {
+      if (isAuthInvalidError(err as Error)) {
+        await handleInvalidSession();
+        return;
+      }
       const error = err as NetworkError;
       if (error.isNetworkError === true) {
         setError("Connect to the internet to view your overview");

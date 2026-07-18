@@ -3,7 +3,7 @@ import {
   setSyncStatus,
   getAllCases,
 } from "../database/caseRepository";
-import { syncCasesToServer } from "../api/client";
+import { syncCasesToServer, isAuthInvalidError } from "../api/client";
 
 let lastSyncAttempt: number = 0;
 const SYNC_DEBOUNCE_MS = 10000;
@@ -13,7 +13,10 @@ export function canSync(): boolean {
   return now - lastSyncAttempt >= SYNC_DEBOUNCE_MS;
 }
 
-export async function runSync(accessToken: string | null): Promise<void> {
+export async function runSync(
+  accessToken: string | null,
+  onAuthInvalid?: () => Promise<void>
+): Promise<void> {
   if (canSync() === false) {
     console.log("Sync debounced - skipping");
     return;
@@ -60,6 +63,10 @@ export async function runSync(accessToken: string | null): Promise<void> {
     const syncingCases = allCases.filter((c) => c.syncStatus === "syncing");
     for (const malariaCase of syncingCases) {
       await setSyncStatus(malariaCase.id, "sync_failed");
+    }
+
+    if (isAuthInvalidError(error as Error) && onAuthInvalid) {
+      await onAuthInvalid();
     }
   }
 }

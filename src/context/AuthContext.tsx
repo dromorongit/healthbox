@@ -142,6 +142,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const handleInvalidSession = async (): Promise<void> => {
+    try {
+      setCurrentUser(null);
+      setAccessToken(null);
+      await AsyncStorage.removeItem(SESSION_KEY);
+      await AsyncStorage.removeItem(TOKEN_KEY);
+    } catch (error) {
+      console.error("Failed to handle invalid session:", error);
+    }
+  };
+
   const value: AuthContextType = {
     currentUser,
     accessToken,
@@ -149,6 +160,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     login,
     register,
     logout,
+    handleInvalidSession,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
