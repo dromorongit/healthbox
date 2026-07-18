@@ -125,58 +125,62 @@ export const SupervisorHomeScreen: React.FC<any> = () => {
               </View>
             </View>
 
-            <View style={styles.resultSection}>
-              <Text style={styles.sectionTitle}>Test Results Breakdown</Text>
-              <View style={styles.resultRow}>
-                <View style={styles.resultColumn}>
-                  <Text style={styles.resultValue}>{overview.rdtPositive}</Text>
-                  <Text style={styles.resultLabel}>RDT Positive</Text>
-                </View>
-                <View style={styles.resultColumn}>
-                  <Text style={styles.resultValue}>{overview.rdtNegative}</Text>
-                  <Text style={styles.resultLabel}>RDT Negative</Text>
-                </View>
-                <View style={styles.resultColumn}>
-                  <Text style={styles.resultValue}>{overview.microscopyPositive}</Text>
-                  <Text style={styles.resultLabel}>Microscopy Positive</Text>
-                </View>
-                <View style={styles.resultColumn}>
-                  <Text style={styles.resultValue}>{overview.microscopyNegative}</Text>
-                  <Text style={styles.resultLabel}>Microscopy Negative</Text>
-                </View>
-              </View>
-            </View>
+<View style={styles.resultSection}>
+             <Text style={styles.sectionTitle}>Test Results Breakdown</Text>
+             <View style={styles.resultGrid}>
+               <View style={[styles.resultCard, { backgroundColor: colors.accentGold + "20" }]}>
+                 <Text style={styles.resultCardValue}>{overview.rdtPositive}</Text>
+                 <Text style={styles.resultCardLabel}>RDT Positive</Text>
+               </View>
+               <View style={[styles.resultCard, { backgroundColor: colors.accentGold + "10" }]}>
+                 <Text style={styles.resultCardValue}>{overview.rdtNegative}</Text>
+                 <Text style={styles.resultCardLabel}>RDT Negative</Text>
+               </View>
+               <View style={[styles.resultCard, { backgroundColor: colors.primaryBlue + "20" }]}>
+                 <Text style={styles.resultCardValue}>{overview.microscopyPositive}</Text>
+                 <Text style={styles.resultCardLabel}>Microscopy Positive</Text>
+               </View>
+               <View style={[styles.resultCard, { backgroundColor: colors.primaryBlue + "10" }]}>
+                 <Text style={styles.resultCardValue}>{overview.microscopyNegative}</Text>
+                 <Text style={styles.resultCardLabel}>Microscopy Negative</Text>
+               </View>
+             </View>
+           </View>
           </View>
 
           <View style={styles.teamsSection}>
             <Text style={styles.sectionTitle}>Teams in Facility</Text>
             {overview.teams.length === 0 ? (
               <Text style={styles.emptyText}>No teams exist yet in this facility.</Text>
-            ) : (
-              <FlatList
-                data={overview.teams}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <TouchableOpacity style={styles.teamCard}>
-                    <View style={styles.teamInfo}>
-                      <Text style={styles.teamName}>{item.name}</Text>
-                      <Text style={styles.teamLeader}>Leader: {item.leaderName}</Text>
-                    </View>
-                    <View style={styles.teamStats}>
-                      <Text style={styles.teamStatValue}>{item.memberCount}</Text>
-                      <Text style={styles.teamStatLabel}>Members</Text>
-                    </View>
-                    <View style={styles.teamStats}>
-                      <Text style={styles.teamStatValue}>{item.caseCount}</Text>
-                      <Text style={styles.teamStatLabel}>Cases</Text>
-                    </View>
-                  </TouchableOpacity>
-                )}
-                refreshControl={
-                  <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                }
-              />
-            )}
+) : (
+               <FlatList
+                 data={overview.teams}
+                 keyExtractor={(item) => item.id}
+                 renderItem={({ item }) => (
+                   <TouchableOpacity style={styles.teamCard}>
+                     <View style={styles.teamHeader}>
+                       <View style={styles.teamInfo}>
+                         <Text style={styles.teamName}>{item.name}</Text>
+                         <Text style={styles.teamLeader}>Leader: {item.leaderName}</Text>
+                       </View>
+                     </View>
+                     <View style={styles.teamStatsRow}>
+                       <View style={styles.teamStatItem}>
+                         <Text style={styles.teamStatValue}>{item.memberCount}</Text>
+                         <Text style={styles.teamStatLabel}>Members</Text>
+                       </View>
+                       <View style={styles.teamStatItem}>
+                         <Text style={styles.teamStatValue}>{item.caseCount}</Text>
+                         <Text style={styles.teamStatLabel}>Cases</Text>
+                       </View>
+                     </View>
+                   </TouchableOpacity>
+                 )}
+                 refreshControl={
+                   <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                 }
+               />
+             )}
           </View>
         </>
       ) : (
@@ -286,35 +290,44 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     marginBottom: 12,
   },
-  resultRow: {
+  resultGrid: {
     flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
     justifyContent: "space-between",
   },
-  resultColumn: {
+  resultCard: {
+    width: "48%",
+    borderRadius: 8,
+    padding: 12,
     alignItems: "center",
   },
-  resultValue: {
-    fontSize: typography.sizes.body,
+  resultCardValue: {
+    fontSize: typography.sizes.h3,
     fontWeight: typography.weights.bold as any,
     color: colors.textPrimary,
   },
-  resultLabel: {
+  resultCardLabel: {
     fontSize: typography.sizes.caption,
     color: colors.textSecondary,
     textAlign: "center",
+    marginTop: 4,
   },
   teamsSection: {
     marginTop: 24,
     flex: 1,
   },
   teamCard: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: "column",
     backgroundColor: colors.backgroundSecondary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
+  },
+  teamHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
   },
   teamInfo: {
     flex: 1,
@@ -323,14 +336,19 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.body,
     fontWeight: typography.weights.medium as any,
     color: colors.textPrimary,
+    marginBottom: 4,
   },
   teamLeader: {
     fontSize: typography.sizes.caption,
     color: colors.textSecondary,
+    marginBottom: 12,
   },
-  teamStats: {
+  teamStatsRow: {
+    flexDirection: "row",
+    gap: 16,
+  },
+  teamStatItem: {
     alignItems: "center",
-    marginLeft: 16,
   },
   teamStatValue: {
     fontSize: typography.sizes.h3,

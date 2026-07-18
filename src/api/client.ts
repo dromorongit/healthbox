@@ -171,6 +171,67 @@ export interface FieldWorkerOverview {
   microscopyNegative: number;
 }
 
+interface FieldWorkerOverviewResponse {
+  total: number;
+  byStatus: { draft: number; submitted: number };
+  byResult: {
+    rdt: { positive: number; negative: number };
+    microscopy: { positive: number; negative: number };
+  };
+  recentCases: Array<{
+    id: string;
+    patientFullName: string;
+    visitDate: string;
+    rdtResult?: string;
+    microscopyResult?: string;
+    status: string;
+    healthWorkerId: string;
+  }>;
+}
+
+export async function getFieldWorkerOverview(accessToken: string): Promise<FieldWorkerOverview> {
+  try {
+    const response = await fetch(`${API_URL}/api/overview/field-worker`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (response.ok === false) {
+      if (response.status === 401) {
+        throw createAuthInvalidError();
+      }
+      let errorData: { error?: string };
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = {};
+      }
+      throw new Error(errorData.error ?? "Failed to get overview");
+    }
+
+    const data = (await response.json()) as FieldWorkerOverviewResponse;
+    return {
+      totalCases: data.total,
+      draftCount: data.byStatus.draft,
+      submittedCount: data.byStatus.submitted,
+      rdtPositive: data.byResult.rdt.positive,
+      rdtNegative: data.byResult.rdt.negative,
+      microscopyPositive: data.byResult.microscopy.positive,
+      microscopyNegative: data.byResult.microscopy.negative,
+    };
+  } catch (error) {
+    const err = error as Error;
+    if (isNetworkError(err)) {
+      const networkError = new Error("Network error. Please connect to the internet to view your overview.") as NetworkError;
+      networkError.isNetworkError = true;
+      throw networkError;
+    }
+    throw err;
+  }
+}
+
 export interface TeamLeaderOverview {
   personal: FieldWorkerOverview;
   team: {
@@ -203,6 +264,195 @@ export interface SupervisorOverview {
     memberCount: number;
     caseCount: number;
   }[];
+}
+
+export class NoTeamError extends Error {
+  constructor() {
+    super("No team found");
+    this.name = "NoTeamError";
+  }
+}
+
+export function isNoTeamError(error: Error): error is NoTeamError {
+  return error.name === "NoTeamError";
+}
+
+interface TeamLeaderOverviewResponse {
+  hasTeam: boolean;
+  personalStats?: {
+    total: number;
+    byStatus: { draft: number; submitted: number };
+    byResult: {
+      rdt: { positive: number; negative: number };
+      microscopy: { positive: number; negative: number };
+    };
+    recentCases: Array<{
+      id: string;
+      patientFullName: string;
+      visitDate: string;
+      rdtResult?: string;
+      microscopyResult?: string;
+      status: string;
+      healthWorkerId: string;
+    }>;
+  };
+  team?: {
+    id: string;
+    name: string;
+    facility: string;
+    teamLeader: {
+      id: string;
+      fullName: string;
+      phoneNumber: string;
+    };
+    memberCount: number;
+  };
+  members?: Array<{
+    id: string;
+    fullName: string;
+    phoneNumber: string;
+    caseCount: number;
+  }>;
+  teamTotals?: {
+    totalCases: number;
+    rdtPositive: number;
+    rdtNegative: number;
+    microscopyPositive: number;
+    microscopyNegative: number;
+  };
+}
+
+export async function getTeamLeaderOverview(accessToken: string): Promise<TeamLeaderOverview> {
+  try {
+    const response = await fetch(`${API_URL}/api/overview/team-leader`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (response.status === 401) {
+      throw createAuthInvalidError();
+    }
+
+    if (response.ok === false && response.status !== 200) {
+      let errorData: { error?: string };
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = {};
+      }
+      throw new Error(errorData.error ?? "Failed to get overview") as ApiError;
+    }
+
+    const data = (await response.json()) as TeamLeaderOverviewResponse;
+    
+    if (data.hasTeam === false) {
+      throw new NoTeamError();
+    }
+
+    return {
+      personal: {
+        totalCases: data.personalStats?.total ?? 0,
+        draftCount: data.personalStats?.byStatus.draft ?? 0,
+        submittedCount: data.personalStats?.byStatus.submitted ?? 0,
+        rdtPositive: data.personalStats?.byResult.rdt.positive ?? 0,
+        rdtNegative: data.personalStats?.byResult.rdt.negative ?? 0,
+        microscopyPositive: data.personalStats?.byResult.microscopy.positive ?? 0,
+        microscopyNegative: data.personalStats?.byResult.microscopy.negative ?? 0,
+      },
+      team: {
+        id: data.team?.id ?? "",
+        name: data.team?.name ?? "",
+        totalCases: data.teamTotals?.totalCases ?? 0,
+        draftCount: 0,
+        submittedCount: 0,
+        rdtPositive: data.teamTotals?.rdtPositive ?? 0,
+        rdtNegative: data.teamTotals?.rdtNegative ?? 0,
+        microscopyPositive: data.teamTotals?.microscopyPositive ?? 0,
+        microscopyNegative: data.teamTotals?.microscopyNegative ?? 0,
+        members: data.members ?? [],
+      },
+    } as TeamLeaderOverview;
+  } catch (error) {
+    const err = error as Error;
+    if (isNetworkError(err)) {
+      const networkError = new Error("Network error. Please connect to the internet to view your overview.") as NetworkError;
+      networkError.isNetworkError = true;
+      throw networkError;
+    }
+    throw err;
+  }
+}
+
+interface SupervisorOverviewResponse {
+  facility: string;
+  teams: {
+    id: string;
+    name: string;
+    teamLeaderName: string;
+    memberCount: number;
+    totalCases: number;
+    rdtPositive: number;
+    rdtNegative: number;
+  }[];
+  facilityTotals: {
+    totalTeams: number;
+    totalCases: number;
+    rdtPositive: number;
+    rdtNegative: number;
+  };
+}
+
+export async function getSupervisorOverview(accessToken: string): Promise<SupervisorOverview> {
+  try {
+    const response = await fetch(`${API_URL}/api/overview/supervisor`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (response.ok === false) {
+      if (response.status === 401) {
+        throw createAuthInvalidError();
+      }
+      let errorData: { error?: string };
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = {};
+      }
+      throw new Error(errorData.error ?? "Failed to get overview");
+    }
+
+    const data = (await response.json()) as SupervisorOverviewResponse;
+    return {
+      facility: data.facility,
+      totalCases: data.facilityTotals.totalCases,
+      draftCount: 0,
+      submittedCount: 0,
+      rdtPositive: data.facilityTotals.rdtPositive,
+      rdtNegative: data.facilityTotals.rdtNegative,
+      microscopyPositive: 0,
+      microscopyNegative: 0,
+      teams: data.teams.map(team => ({
+        id: team.id,
+        name: team.name,
+        leaderName: team.teamLeaderName,
+        memberCount: team.memberCount,
+        caseCount: team.totalCases,
+      })),
+    };
+  } catch (error) {
+    const err = error as Error;
+    if (isNetworkError(err)) {
+      const networkError = new Error("Network error. Please connect to the internet to view your overview.") as NetworkError;
+      networkError.isNetworkError = true;
+      throw networkError;
+    }
+    throw err;
+  }
 }
 
 export interface NetworkError extends Error {
@@ -264,10 +514,6 @@ export async function searchFieldWorkerByPhone(
       },
     });
 
-    if (response.status === 404) {
-      return null;
-    }
-
     if (response.ok === false) {
       if (response.status === 401) {
         throw createAuthInvalidError();
@@ -281,7 +527,11 @@ export async function searchFieldWorkerByPhone(
       throw new Error(errorData.error ?? "Search failed");
     }
 
-    return (await response.json()) as { id: string; fullName: string; phoneNumber: string };
+    const data = (await response.json()) as { user: { id: string; fullName: string; phoneNumber: string } | null };
+    if (data.user === null) {
+      return null;
+    }
+    return { id: data.user.id, fullName: data.user.fullName, phoneNumber: data.user.phoneNumber };
   } catch (error) {
     const err = error as Error;
     if (isNetworkError(err)) {
@@ -410,191 +660,6 @@ export async function getMyTeam(accessToken: string): Promise<Team | null> {
     }
     
     return data.team;
-  } catch (error) {
-    const err = error as Error;
-    if (isNetworkError(err)) {
-      const networkError = new Error("Network error. Please connect to the internet to view your overview.") as NetworkError;
-      networkError.isNetworkError = true;
-      throw networkError;
-    }
-    throw err;
-  }
-}
-
-export async function getFieldWorkerOverview(accessToken: string): Promise<FieldWorkerOverview> {
-  try {
-    const response = await fetch(`${API_URL}/api/overview/field-worker`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    if (response.ok === false) {
-      if (response.status === 401) {
-        throw createAuthInvalidError();
-      }
-      let errorData: { error?: string };
-      try {
-        errorData = await response.json();
-      } catch {
-        errorData = {};
-      }
-      throw new Error(errorData.error ?? "Failed to get overview");
-    }
-
-    return (await response.json()) as FieldWorkerOverview;
-  } catch (error) {
-    const err = error as Error;
-    if (isNetworkError(err)) {
-      const networkError = new Error("Network error. Please connect to the internet to view your overview.") as NetworkError;
-      networkError.isNetworkError = true;
-      throw networkError;
-    }
-    throw err;
-  }
-}
-
-export class NoTeamError extends Error {
-  constructor() {
-    super("No team found");
-    this.name = "NoTeamError";
-  }
-}
-
-export function isNoTeamError(error: Error): error is NoTeamError {
-  return error.name === "NoTeamError";
-}
-
-interface TeamLeaderOverviewResponse {
-  hasTeam: boolean;
-  personalStats?: {
-    total: number;
-    byStatus: { draft: number; submitted: number };
-    byResult: {
-      rdt: { positive: number; negative: number };
-      microscopy: { positive: number; negative: number };
-    };
-    recentCases: Array<{
-      id: string;
-      patientFullName: string;
-      visitDate: string;
-      rdtResult?: string;
-      microscopyResult?: string;
-      status: string;
-      healthWorkerId: string;
-    }>;
-  };
-  team?: {
-    id: string;
-    name: string;
-    facility: string;
-    teamLeader: {
-      id: string;
-      fullName: string;
-      phoneNumber: string;
-    };
-    memberCount: number;
-  };
-  members?: Array<{
-    id: string;
-    fullName: string;
-    phoneNumber: string;
-    caseCount: number;
-  }>;
-  teamTotals?: {
-    totalCases: number;
-    rdtPositive: number;
-    rdtNegative: number;
-  };
-}
-
-export async function getTeamLeaderOverview(accessToken: string): Promise<TeamLeaderOverview> {
-  try {
-    const response = await fetch(`${API_URL}/api/overview/team-leader`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    if (response.status === 401) {
-      throw createAuthInvalidError();
-    }
-
-    if (response.ok === false && response.status !== 200) {
-      let errorData: { error?: string };
-      try {
-        errorData = await response.json();
-      } catch {
-        errorData = {};
-      }
-      throw new Error(errorData.error ?? "Failed to get overview") as ApiError;
-    }
-
-    const data = (await response.json()) as TeamLeaderOverviewResponse;
-    
-    if (data.hasTeam === false) {
-      throw new NoTeamError();
-    }
-
-    return {
-      personal: {
-        totalCases: data.personalStats?.total ?? 0,
-        draftCount: data.personalStats?.byStatus.draft ?? 0,
-        submittedCount: data.personalStats?.byStatus.submitted ?? 0,
-        rdtPositive: data.personalStats?.byResult.rdt.positive ?? 0,
-        rdtNegative: data.personalStats?.byResult.rdt.negative ?? 0,
-        microscopyPositive: data.personalStats?.byResult.microscopy.positive ?? 0,
-        microscopyNegative: data.personalStats?.byResult.microscopy.negative ?? 0,
-      },
-      team: {
-        id: data.team?.id ?? "",
-        name: data.team?.name ?? "",
-        totalCases: data.teamTotals?.totalCases ?? 0,
-        draftCount: 0,
-        submittedCount: 0,
-        rdtPositive: data.teamTotals?.rdtPositive ?? 0,
-        rdtNegative: data.teamTotals?.rdtNegative ?? 0,
-        microscopyPositive: 0,
-        microscopyNegative: 0,
-        members: data.members ?? [],
-      },
-    } as TeamLeaderOverview;
-  } catch (error) {
-    const err = error as Error;
-    if (isNetworkError(err)) {
-      const networkError = new Error("Network error. Please connect to the internet to view your overview.") as NetworkError;
-      networkError.isNetworkError = true;
-      throw networkError;
-    }
-    throw err;
-  }
-}
-
-export async function getSupervisorOverview(accessToken: string): Promise<SupervisorOverview> {
-  try {
-    const response = await fetch(`${API_URL}/api/overview/supervisor`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    if (response.ok === false) {
-      if (response.status === 401) {
-        throw createAuthInvalidError();
-      }
-      let errorData: { error?: string };
-      try {
-        errorData = await response.json();
-      } catch {
-        errorData = {};
-      }
-      throw new Error(errorData.error ?? "Failed to get overview");
-    }
-
-    return (await response.json()) as SupervisorOverview;
   } catch (error) {
     const err = error as Error;
     if (isNetworkError(err)) {

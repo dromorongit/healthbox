@@ -113,9 +113,11 @@ overviewRouter.get(
         where: { healthWorkerId: { in: allMemberIds } }
       });
 
-      const total = allCases.length;
-      const rdtPositive = allCases.filter(c => c.rdtResult === "positive").length;
-      const rdtNegative = allCases.filter(c => c.rdtResult === "negative").length;
+const total = allCases.length;
+       const rdtPositive = allCases.filter(c => c.rdtResult === "positive").length;
+       const rdtNegative = allCases.filter(c => c.rdtResult === "negative").length;
+       const microscopyPositive = allCases.filter(c => c.microscopyResult === "positive").length;
+       const microscopyNegative = allCases.filter(c => c.microscopyResult === "negative").length;
 
       const recentCases = await prisma.malariaCase.findMany({
         where: { healthWorkerId: { in: allMemberIds } },
@@ -185,11 +187,13 @@ overviewRouter.get(
           phoneNumber: m.phoneNumber,
           caseCount: caseCountMap.get(m.id) ?? 0
         })),
-        teamTotals: {
-          totalCases: total,
-          rdtPositive,
-          rdtNegative
-        },
+teamTotals: {
+           totalCases: total,
+           rdtPositive,
+           rdtNegative,
+           microscopyPositive,
+           microscopyNegative
+         },
         perMemberComparison
       });
     } catch (error) {

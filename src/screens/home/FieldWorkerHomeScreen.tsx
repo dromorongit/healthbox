@@ -154,27 +154,27 @@ export const FieldWorkerHomeScreen: React.FC<any> = ({ navigation }) => {
           </View>
         </View>
 
-        <View style={styles.resultSection}>
-          <Text style={styles.sectionTitle}>Test Results</Text>
-          <View style={styles.resultRow}>
-            <View style={styles.resultColumn}>
-              <Text style={styles.resultValue}>{overview.rdtPositive}</Text>
-              <Text style={styles.resultLabel}>RDT Positive</Text>
-            </View>
-            <View style={styles.resultColumn}>
-              <Text style={styles.resultValue}>{overview.rdtNegative}</Text>
-              <Text style={styles.resultLabel}>RDT Negative</Text>
-            </View>
-            <View style={styles.resultColumn}>
-              <Text style={styles.resultValue}>{overview.microscopyPositive}</Text>
-              <Text style={styles.resultLabel}>Microscopy Positive</Text>
-            </View>
-            <View style={styles.resultColumn}>
-              <Text style={styles.resultValue}>{overview.microscopyNegative}</Text>
-              <Text style={styles.resultLabel}>Microscopy Negative</Text>
-            </View>
-          </View>
-        </View>
+<View style={styles.resultSection}>
+           <Text style={styles.sectionTitle}>Test Results Breakdown</Text>
+           <View style={styles.resultGrid}>
+             <View style={[styles.resultCard, { backgroundColor: colors.accentGold + "20" }]}>
+               <Text style={styles.resultCardValue}>{overview.rdtPositive}</Text>
+               <Text style={styles.resultCardLabel}>RDT Positive</Text>
+             </View>
+             <View style={[styles.resultCard, { backgroundColor: colors.accentGold + "10" }]}>
+               <Text style={styles.resultCardValue}>{overview.rdtNegative}</Text>
+               <Text style={styles.resultCardLabel}>RDT Negative</Text>
+             </View>
+             <View style={[styles.resultCard, { backgroundColor: colors.primaryBlue + "20" }]}>
+               <Text style={styles.resultCardValue}>{overview.microscopyPositive}</Text>
+               <Text style={styles.resultCardLabel}>Microscopy Positive</Text>
+             </View>
+             <View style={[styles.resultCard, { backgroundColor: colors.primaryBlue + "10" }]}>
+               <Text style={styles.resultCardValue}>{overview.microscopyNegative}</Text>
+               <Text style={styles.resultCardLabel}>Microscopy Negative</Text>
+             </View>
+           </View>
+         </View>
       </View>
     </ScreenContainer>
   );
@@ -272,22 +272,28 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     marginBottom: 12,
   },
-  resultRow: {
+  resultGrid: {
     flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
     justifyContent: "space-between",
   },
-  resultColumn: {
+  resultCard: {
+    width: "48%",
+    borderRadius: 8,
+    padding: 12,
     alignItems: "center",
   },
-  resultValue: {
-    fontSize: typography.sizes.body,
+  resultCardValue: {
+    fontSize: typography.sizes.h3,
     fontWeight: typography.weights.bold as any,
     color: colors.textPrimary,
   },
-  resultLabel: {
+  resultCardLabel: {
     fontSize: typography.sizes.caption,
     color: colors.textSecondary,
     textAlign: "center",
+    marginTop: 4,
   },
   recentSection: {
     marginTop: 24,
