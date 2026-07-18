@@ -4,9 +4,10 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get("adminToken")?.value ?? request.headers.get("authorization")?.split(" ")[1];
 
   const isLoginPage = request.nextUrl.pathname.startsWith("/login");
+  const isRegisterPage = request.nextUrl.pathname.startsWith("/register");
   const isApiRoute = request.nextUrl.pathname.startsWith("/api");
 
-  if (isLoginPage || isApiRoute) {
+  if (isLoginPage || isRegisterPage || isApiRoute) {
     return NextResponse.next();
   }
 
