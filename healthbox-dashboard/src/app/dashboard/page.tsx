@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import Cookies from "js-cookie";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
@@ -23,7 +24,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        const token = localStorage.getItem("adminToken");
+        const token = Cookies.get("adminToken");
         const response = await fetch(`${API_BASE_URL}/api/admin/analytics/summary`, {
           headers: { Authorization: `Bearer ${token}` },
         });

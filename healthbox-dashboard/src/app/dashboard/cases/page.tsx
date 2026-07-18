@@ -5,6 +5,7 @@ import Link from "next/link";
 import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
 import Papa from "papaparse";
+import Cookies from "js-cookie";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
@@ -46,7 +47,7 @@ export default function CasesPage() {
     setError("");
 
     try {
-      const token = localStorage.getItem("adminToken");
+      const token = Cookies.get("adminToken");
       const params = new URLSearchParams({
         ...filters,
         page: page.toString(),
@@ -76,7 +77,7 @@ export default function CasesPage() {
   }, [page, filters]);
 
   const handleExportCSV = async () => {
-    const token = localStorage.getItem("adminToken");
+    const token = Cookies.get("adminToken");
     const params = new URLSearchParams({ ...filters, limit: "10000" });
     const response = await fetch(`${API_BASE_URL}/api/admin/cases?${params}`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -89,7 +90,7 @@ export default function CasesPage() {
   };
 
   const handleExportExcel = async () => {
-    const token = localStorage.getItem("adminToken");
+    const token = Cookies.get("adminToken");
     const params = new URLSearchParams({ ...filters, limit: "10000" });
     const response = await fetch(`${API_BASE_URL}/api/admin/cases?${params}`, {
       headers: { Authorization: `Bearer ${token}` },

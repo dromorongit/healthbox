@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Cookies from "js-cookie";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
@@ -28,7 +29,7 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem("adminToken", data.accessToken);
+        Cookies.set("adminToken", data.accessToken, { expires: 7, sameSite: "strict" });
         router.push("/dashboard");
       } else {
         setError(data.error ?? "Login failed");

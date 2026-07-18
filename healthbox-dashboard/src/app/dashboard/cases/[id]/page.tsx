@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
@@ -46,7 +47,7 @@ export default function CaseDetailPage() {
   useEffect(() => {
     const fetchCase = async () => {
       try {
-        const token = localStorage.getItem("adminToken");
+        const token = Cookies.get("adminToken");
         const response = await fetch(`${API_BASE_URL}/api/admin/cases/${params.id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
