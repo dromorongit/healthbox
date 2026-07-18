@@ -1,10 +1,12 @@
+export type Role = "field_worker" | "team_leader" | "supervisor";
+
 export interface User {
   id: string;
   fullName: string;
   phoneNumber: string;
   passwordHash: string;
   facility: string;
-  role: "field_worker" | "supervisor";
+  role: Role;
   createdAt: string;
   syncStatus?: "unsynced" | "syncing" | "synced" | "sync_failed";
   serverUserId?: string | null;
@@ -15,7 +17,7 @@ export interface RegisterUserData {
   phoneNumber: string;
   facility: string;
   password: string;
-  role: "field_worker" | "supervisor";
+  role: Role;
 }
 
 export interface AuthContextType {

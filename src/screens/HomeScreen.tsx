@@ -1,65 +1,26 @@
 import React from "react";
-import { Text, StyleSheet, Alert, TouchableOpacity } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { ScreenContainer } from "../components/ScreenContainer";
-import { Button } from "../components/Button";
-import { colors } from "../theme/colors";
-import { typography } from "../theme/typography";
 import { useAuth } from "../context/AuthContext";
-import { resetDatabase } from "../database/db";
+import { FieldWorkerHomeScreen } from "./home/FieldWorkerHomeScreen";
+import { TeamLeaderHomeScreen } from "./home/TeamLeaderHomeScreen";
+import { SupervisorHomeScreen } from "./home/SupervisorHomeScreen";
+import { Role } from "../types/user";
 
 type Props = NativeStackScreenProps<any, "Home">;
 
-export const HomeScreen: React.FC<Props> = () => {
-  const { currentUser, logout } = useAuth();
+export const HomeScreen: React.FC<Props> = (props) => {
+  const { currentUser } = useAuth();
+  const role = currentUser?.role ?? "field_worker";
 
-  const handleLogout = async () => {
-    await logout();
-  };
+  if (role === "field_worker") {
+    return <FieldWorkerHomeScreen {...props} />;
+  }
+  if (role === "team_leader") {
+    return <TeamLeaderHomeScreen {...props} />;
+  }
+  if (role === "supervisor") {
+    return <SupervisorHomeScreen {...props} />;
+  }
 
-  const handleResetDatabase = async () => {
-    try {
-      await resetDatabase();
-      Alert.alert("Database Reset", "Database has been reset successfully.");
-    } catch (error) {
-      if (error instanceof Error) {
-        Alert.alert("Error", error.message);
-      }
-    }
-  };
-
-  return (
-    <ScreenContainer>
-      <Text style={styles.welcomeText}>
-        Welcome{currentUser?.fullName ? `, ${currentUser.fullName}` : ""}
-      </Text>
-      <Button
-        title="Log Out"
-        variant="secondary"
-        onPress={handleLogout}
-        style={styles.logoutButton}
-      />
-      <TouchableOpacity onPress={handleResetDatabase}>
-        <Text style={styles.devButton}>Dev: Reset Database</Text>
-      </TouchableOpacity>
-    </ScreenContainer>
-  );
+  return null;
 };
-
-const styles = StyleSheet.create({
-  welcomeText: {
-    fontSize: typography.sizes.h2,
-    fontWeight: typography.weights.bold as any,
-    color: colors.textPrimary,
-    marginBottom: 24,
-  },
-  logoutButton: {
-    marginTop: 12,
-  },
-  devButton: {
-    fontSize: typography.sizes.caption,
-    color: colors.textSecondary,
-    marginTop: 24,
-    textAlign: "center",
-  },
-});

@@ -7,7 +7,7 @@ import { Button } from "../components/Button";
 import { colors } from "../theme/colors";
 import { typography } from "../theme/typography";
 import { useAuth } from "../context/AuthContext";
-import { RegisterUserData } from "../types/user";
+import { RegisterUserData, Role } from "../types/user";
 
 type Props = NativeStackScreenProps<any, "Register">;
 
@@ -17,7 +17,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const [facility, setFacility] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
-  const [role, setRole] = useState<"field_worker" | "supervisor">("field_worker");
+  const [role, setRole] = useState<Role>("field_worker");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState<boolean>(false);
   const { register } = useAuth();
@@ -118,6 +118,12 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           title="Field Worker"
           variant={role === "field_worker" ? "primary" : "secondary"}
           onPress={() => setRole("field_worker")}
+          style={styles.roleButton}
+        />
+        <Button
+          title="Team Leader"
+          variant={role === "team_leader" ? "primary" : "secondary"}
+          onPress={() => setRole("team_leader")}
           style={styles.roleButton}
         />
         <Button
